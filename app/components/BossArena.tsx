@@ -1,5 +1,4 @@
 'use client';
-
 import { motion, AnimatePresence } from 'framer-motion';
 import { BOSS } from '../game/data';
 import { GameState, GameAction } from '../game/state';
@@ -11,20 +10,21 @@ interface BossArenaProps {
 
 function HpBar({ hp, maxHp, color, label }: { hp: number; maxHp: number; color: string; label: string }) {
   const pct = Math.max(0, (hp / maxHp) * 100);
-  const dangerColor = pct < 25 ? '#ff0040' : pct < 50 ? '#ff6600' : color;
+  const dangerColor = pct < 25 ? '#c0392b' : pct < 50 ? '#b45309' : color;
+  const dangerBg    = pct < 25 ? '#fef2f2' : pct < 50 ? '#fffbeb' : color === '#c0392b' ? '#fef2f2' : '#f0fdf4';
   return (
-    <div className="mb-1">
+    <div className="mb-2">
       <div className="flex justify-between text-[10px] mb-1">
-        <span style={{ color: dangerColor }}>{label}</span>
-        <span style={{ color: dangerColor }}>{hp} / {maxHp}</span>
+        <span className="font-medium" style={{ color: dangerColor }}>{label}</span>
+        <span className="font-semibold" style={{ color: dangerColor }}>{hp} / {maxHp}</span>
       </div>
-      <div className="stat-bar" style={{ borderColor: dangerColor, height: 10 }}>
+      <div className="h-2.5 rounded-full overflow-hidden" style={{ background: dangerBg }}>
         <motion.div
-          className="stat-fill"
+          className="h-full rounded-full"
           initial={{ width: '100%' }}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.4 }}
-          style={{ background: dangerColor, boxShadow: `0 0 8px ${dangerColor}` }}
+          style={{ background: dangerColor }}
         />
       </div>
     </div>
@@ -37,74 +37,61 @@ export default function BossArena({ state, dispatch }: BossArenaProps) {
 
   if (!boss.active && state.phase !== 'boss') {
     return (
-      <div className="panel-red h-full flex flex-col items-center justify-center p-6 text-center">
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center bg-white">
         <motion.div
-          animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
-          transition={{ duration: 4, repeat: Infinity }}
+          animate={{ scale: [1, 1.08, 1] }}
+          transition={{ duration: 3, repeat: Infinity }}
           className="text-6xl mb-4"
         >
           🦁
         </motion.div>
-        <div className="neon-red text-lg font-bold mb-2">YERLAN AWAITS</div>
-        <div className="text-[#666] text-xs max-w-[200px]">
+        <div className="text-base font-semibold text-[#c0392b] mb-2">Yerlan Awaits</div>
+        <div className="text-xs text-[#9ca3af] max-w-[200px] leading-relaxed">
           Complete enough trades and pitches to unlock the final boss fight.
         </div>
-        <div className="mt-4 text-[10px] text-[#555]">
-          Need: 2 sales + 1 pitch
-        </div>
+        <div className="mt-3 text-[10px] text-[#9ca3af]">Need: 2 sales + 1 pitch</div>
       </div>
     );
   }
 
   return (
-    <div className="panel-red h-full flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="px-4 py-3 border-b-2 border-[#ff0040]">
-        <div className="neon-red text-xs font-bold tracking-widest">[ BOSS ARENA ]</div>
-        <div className="text-[10px] text-[#666] mt-0.5 pulse-glow">FINAL CONFRONTATION</div>
+    <div className="h-full flex flex-col overflow-hidden bg-white">
+      <div className="px-4 py-3 border-b border-[#fecaca] shrink-0 bg-[#fef2f2]">
+        <div className="text-xs font-semibold text-[#c0392b]">Boss Arena</div>
+        <div className="text-[10px] text-[#9ca3af] mt-0.5">Final Confrontation</div>
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden p-3">
-        {/* Boss portrait */}
+        {/* Boss portrait + turn indicator */}
         <div className="flex items-center gap-3 mb-3">
           <motion.div
-            animate={{
-              scale: [1, 1.05, 1],
-              filter: [
-                'drop-shadow(0 0 5px #ff0040)',
-                'drop-shadow(0 0 15px #ff0040)',
-                'drop-shadow(0 0 5px #ff0040)',
-              ],
-            }}
+            animate={{ scale: [1, 1.04, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="text-4xl"
+            className="w-12 h-12 rounded-2xl bg-[#fef2f2] border border-[#fecaca] flex items-center justify-center text-2xl shrink-0"
           >
             {bossData.avatar}
           </motion.div>
-          <div>
-            <div className="neon-red text-sm font-bold">{bossData.name}</div>
-            <div className="text-[9px] text-[#666]">{bossData.title}</div>
+          <div className="flex-1">
+            <div className="text-sm font-semibold text-[#1a1a1a]">{bossData.name}</div>
+            <div className="text-[9px] text-[#9ca3af]">{bossData.title}</div>
           </div>
-          <div className="ml-auto text-right">
-            <div className="text-[9px] text-[#666]">TURN</div>
-            <div
-              className="text-sm font-bold"
-              style={{ color: boss.turn === 'player' ? '#00ff41' : '#ff0040' }}
-            >
-              {boss.turn === 'player' ? 'YOUR MOVE' : 'BOSS MOVE'}
+          <div className="text-right shrink-0">
+            <div className="text-[9px] text-[#9ca3af]">Turn</div>
+            <div className="text-xs font-bold" style={{ color: boss.turn === 'player' ? '#2d6a4f' : '#c0392b' }}>
+              {boss.turn === 'player' ? 'Your Move' : 'Boss Move'}
             </div>
           </div>
         </div>
 
         {/* HP bars */}
-        <div className="mb-3">
-          <HpBar hp={boss.bossHp} maxHp={boss.bossMaxHp} color="#ff0040" label="YERLAN HP" />
-          <HpBar hp={boss.playerHp} maxHp={boss.playerMaxHp} color="#00ff41" label="YOUR HP" />
+        <div className="bg-[#f7f6f3] rounded-xl p-3 mb-3 border border-[#e8e6e1]">
+          <HpBar hp={boss.bossHp} maxHp={boss.bossMaxHp} color="#c0392b" label="Yerlan HP" />
+          <HpBar hp={boss.playerHp} maxHp={boss.playerMaxHp} color="#2d6a4f" label="Your HP" />
         </div>
 
         {/* Boss next move */}
-        <div className="panel p-2 mb-3" style={{ borderColor: '#ff0040', boxShadow: 'none' }}>
-          <div className="text-[9px] text-[#666] mb-1">BOSS NEXT MOVE</div>
+        <div className="bg-[#fef2f2] border border-[#fecaca] rounded-xl p-2.5 mb-3">
+          <div className="text-[9px] text-[#9ca3af] mb-1">Boss next move</div>
           {(() => {
             const nextAbility = BOSS.abilities.find((a) => a.id === boss.bossNextAbility);
             if (!nextAbility) return null;
@@ -112,9 +99,9 @@ export default function BossArena({ state, dispatch }: BossArenaProps) {
             const displayAbility = onCooldown ? BOSS.abilities[0] : nextAbility;
             return (
               <div className="flex items-center gap-2">
-                <span className="neon-red text-xs font-bold">{displayAbility.name}</span>
-                <span className="text-[9px] text-[#666]">— {displayAbility.description}</span>
-                <span className="neon-red text-xs ml-auto">-{displayAbility.damage}HP</span>
+                <span className="text-xs font-semibold text-[#c0392b]">{displayAbility.name}</span>
+                <span className="text-[9px] text-[#9ca3af] flex-1">— {displayAbility.description}</span>
+                <span className="text-xs font-bold text-[#c0392b]">-{displayAbility.damage}HP</span>
               </div>
             );
           })()}
@@ -122,7 +109,7 @@ export default function BossArena({ state, dispatch }: BossArenaProps) {
 
         {/* Player abilities */}
         <div className="mb-3">
-          <div className="text-[10px] text-[#666] mb-2">YOUR MOVES</div>
+          <div className="text-[10px] font-medium text-[#6b7280] mb-2">Your Moves</div>
           <div className="grid grid-cols-2 gap-2">
             {bossData.playerAbilities.map((ability) => {
               const cooldown = boss.abilityCooldowns[ability.id] || 0;
@@ -133,25 +120,30 @@ export default function BossArena({ state, dispatch }: BossArenaProps) {
                 (isHowl && boss.wolfHowlUsed) ||
                 (ability.id === 'bribe' && state.tenge < 50000);
 
+              const btnStyle = disabled
+                ? { background: '#f7f6f3', color: '#9ca3af', border: '1px solid #e8e6e1', cursor: 'not-allowed' }
+                : isHowl
+                  ? { background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }
+                  : ability.id === 'bribe'
+                    ? { background: '#fff7ed', color: '#ea580c', border: '1px solid #fed7aa' }
+                    : { background: '#f0fdf4', color: '#2d6a4f', border: '1px solid #bbf7d0' };
+
               return (
                 <motion.button
                   key={ability.id}
-                  whileHover={!disabled ? { scale: 1.02 } : {}}
+                  whileHover={!disabled ? { y: -1 } : {}}
                   whileTap={!disabled ? { scale: 0.98 } : {}}
-                  className={`btn-brutal ${isHowl ? 'btn-yellow' : ability.id === 'bribe' ? 'btn-orange' : 'btn-green'} text-left p-2`}
+                  className="text-left p-2 rounded-xl transition-all"
+                  style={btnStyle}
                   disabled={disabled}
                   onClick={() => dispatch({ type: 'BOSS_ACTION', abilityId: ability.id })}
                 >
-                  <div className="text-[10px] font-bold">{ability.name}</div>
+                  <div className="text-[10px] font-semibold">{ability.name}</div>
                   <div className="text-[8px] opacity-70 mt-0.5">{ability.description}</div>
                   <div className="flex justify-between items-center mt-1">
-                    <span className="text-[10px]">-{ability.damage} HP</span>
-                    {cooldown > 0 && (
-                      <span className="text-[9px] text-[#ff6600]">CD: {cooldown}</span>
-                    )}
-                    {isHowl && boss.wolfHowlUsed && (
-                      <span className="text-[9px] text-[#555]">USED</span>
-                    )}
+                    <span className="text-[9px] font-medium">-{ability.damage} HP</span>
+                    {cooldown > 0 && <span className="text-[9px] text-[#b45309]">CD: {cooldown}</span>}
+                    {isHowl && boss.wolfHowlUsed && <span className="text-[9px] text-[#9ca3af]">Used</span>}
                   </div>
                 </motion.button>
               );
@@ -161,25 +153,28 @@ export default function BossArena({ state, dispatch }: BossArenaProps) {
 
         {/* Battle log */}
         <div className="flex-1 overflow-hidden">
-          <div className="text-[10px] text-[#666] mb-1">BATTLE LOG</div>
+          <div className="text-[10px] font-medium text-[#6b7280] mb-1.5">Battle Log</div>
           <div className="overflow-y-auto h-full space-y-1">
             <AnimatePresence initial={false}>
               {[...boss.log].reverse().map((entry, i) => (
                 <motion.div
                   key={`${entry}-${i}`}
-                  initial={{ opacity: 0, x: -10 }}
+                  initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="log-entry text-[10px]"
-                  style={{
-                    borderColor: entry.startsWith('⚡')
-                      ? '#00ff41'
-                      : entry.startsWith('🦁')
-                      ? '#ff0040'
-                      : '#666',
-                    color: entry.startsWith('🏆') ? '#ffee00' : entry.startsWith('💀') ? '#ff0040' : '#aaa',
-                  }}
+                  className="flex gap-2 items-start px-2 py-1 rounded-lg"
                 >
-                  {entry}
+                  <div
+                    className="w-1 rounded-full shrink-0 mt-1 self-stretch"
+                    style={{
+                      background: entry.startsWith('⚡') ? '#2d6a4f' : entry.startsWith('🦁') ? '#c0392b' : '#9ca3af',
+                      minHeight: 10,
+                    }}
+                  />
+                  <span className="text-[9px] leading-snug" style={{
+                    color: entry.startsWith('🏆') ? '#b45309' : entry.startsWith('💀') ? '#c0392b' : '#6b7280',
+                  }}>
+                    {entry}
+                  </span>
                 </motion.div>
               ))}
             </AnimatePresence>

@@ -15,14 +15,13 @@ interface RaidNotificationProps {
 }
 
 export default function RaidNotification({ raids, onDismiss }: RaidNotificationProps) {
-  // Auto-dismiss after 5s
   useEffect(() => {
-    raids.forEach((raid) => {
+    const timers = raids.map((raid) => {
       const age = Date.now() - raid.timestamp;
       const remaining = Math.max(0, 5000 - age);
-      const t = setTimeout(() => onDismiss(raid.id), remaining);
-      return () => clearTimeout(t);
+      return setTimeout(() => onDismiss(raid.id), remaining);
     });
+    return () => timers.forEach(clearTimeout);
   }, [raids, onDismiss]);
 
   return (
@@ -31,30 +30,26 @@ export default function RaidNotification({ raids, onDismiss }: RaidNotificationP
         {raids.map((raid) => (
           <motion.div
             key={raid.id}
-            initial={{ opacity: 0, x: 60, scale: 0.9 }}
+            initial={{ opacity: 0, x: 40, scale: 0.95 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 60, scale: 0.9 }}
-            className="pointer-events-auto p-3"
-            style={{
-              background: '#141414',
-              border: '2px solid #ff0040',
-              boxShadow: '0 0 20px rgba(255,0,64,0.5), 4px 4px 0 #ff0040',
-            }}
+            exit={{ opacity: 0, x: 40, scale: 0.95 }}
+            className="pointer-events-auto bg-white rounded-xl border border-[#fecaca] p-3"
+            style={{ boxShadow: '0 4px 16px rgba(192,57,43,0.15)' }}
           >
             <div className="flex items-start gap-2">
-              <span className="text-xl shrink-0">⚔️</span>
+              <span className="text-lg shrink-0">⚔️</span>
               <div className="flex-1">
-                <div className="neon-red text-xs font-bold">RAIDED!</div>
-                <div className="text-[10px] text-[#ccc] mt-0.5">
-                  Player <span className="neon-yellow font-bold">'{raid.raiderName}'</span> sent a scammer your way!
+                <div className="text-xs font-semibold text-[#c0392b]">Raided!</div>
+                <div className="text-[10px] text-[#6b7280] mt-0.5">
+                  <span className="font-medium text-[#1a1a1a]">{raid.raiderName}</span> sent a scammer your way
                 </div>
-                <div className="text-[9px] text-[#666] mt-1">Check your Incoming Pitches.</div>
+                <div className="text-[9px] text-[#9ca3af] mt-1">Check Incoming Pitches →</div>
               </div>
               <button
-                className="text-[#555] hover:text-[#999] text-xs"
+                className="text-[#9ca3af] hover:text-[#6b7280] text-sm transition-colors"
                 onClick={() => onDismiss(raid.id)}
               >
-                ✕
+                ×
               </button>
             </div>
           </motion.div>

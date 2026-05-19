@@ -1,7 +1,8 @@
 export type ItemRarity = 'common' | 'rare' | 'legendary';
 export type Difficulty = 'hardcore' | 'normal' | 'rookie';
 export type ClientPatience = 'very_low' | 'low' | 'medium' | 'high' | 'very_high';
-export type ClientBudget = 'low' | 'medium' | 'high' | 'very_high';
+export type ClientBudget = 'very_low' | 'low' | 'medium' | 'high' | 'very_high';
+export type ClientPersonality = 'aggressive' | 'skeptical' | 'friendly' | 'impulsive' | 'stubborn';
 
 export interface Item {
   id: string;
@@ -32,6 +33,7 @@ export interface Client {
   avatar: string;
   patience: ClientPatience;
   budget: ClientBudget;
+  personality: ClientPersonality;
   preferredItems: string[];
   pitchLines: string[];
 }
@@ -267,7 +269,7 @@ export const NPCS: NPC[] = [
 export const CLIENTS: Client[] = [
   {
     id: 'startup_bro', name: 'Aslan Startup Bro', title: 'CEO/Founder/Visionary', avatar: '🧑‍💻',
-    patience: 'high', budget: 'low',
+    patience: 'high', budget: 'low', personality: 'impulsive',
     preferredItems: ['nft_kebab', 'startup_equity', 'energy_drink_stock', 'iphone6_vintage'],
     pitchLines: [
       "Hey! Love the hustle. We're pre-seed and tight on cash. Founder's rate? We'll give you equity once we raise. Disrupting the market here.",
@@ -276,7 +278,7 @@ export const CLIENTS: Client[] = [
   },
   {
     id: 'office_plankton', name: 'Erlan Office Plankton', title: 'Middle Manager, 3rd Floor', avatar: '👔',
-    patience: 'medium', budget: 'medium',
+    patience: 'medium', budget: 'medium', personality: 'skeptical',
     preferredItems: ['samsung_tv', 'iphone_grey', 'wedding_suit', 'kazakh_vodka'],
     pitchLines: [
       "Hello. I need this for my office. My accounting dept. approved the budget. Can you invoice it as 'IT consulting services'? My manager needs receipts.",
@@ -285,7 +287,7 @@ export const CLIENTS: Client[] = [
   },
   {
     id: 'aghashka', name: 'Aghashka Seitkali', title: 'Respected Elder, Alatau District', avatar: '🧓',
-    patience: 'low', budget: 'high',
+    patience: 'low', budget: 'high', personality: 'stubborn',
     preferredItems: ['kazakh_vodka', 'caviar_caspian', 'samsung_tv', 'shymkent_honey'],
     pitchLines: [
       "Come on, enough talk. Name your price. My driver is outside. I don't have all day for negotiations, bala.",
@@ -294,7 +296,7 @@ export const CLIENTS: Client[] = [
   },
   {
     id: 'instagram_influencer', name: 'Ayana (@glamouralmaty)', title: 'Content Creator / Lifestyle Brand', avatar: '🤳',
-    patience: 'very_low', budget: 'medium',
+    patience: 'very_low', budget: 'medium', personality: 'impulsive',
     preferredItems: ['designer_bag', 'rolex_fake', 'dimash_photo', 'iphone_grey'],
     pitchLines: [
       "This would be SO perfect for my Reels! I have 80K followers. That exposure is worth ₸200K easily. Tag deal? Or cost price?",
@@ -303,7 +305,7 @@ export const CLIENTS: Client[] = [
   },
   {
     id: 'bai_market', name: 'Bai Yergebekov', title: 'Market Mogul of Almaty South', avatar: '🧔‍♂️',
-    patience: 'high', budget: 'very_high',
+    patience: 'high', budget: 'very_high', personality: 'aggressive',
     preferredItems: ['samsung_tv', 'gpu_4090', 'designer_bag', 'crypto_usb'],
     pitchLines: [
       "You have good stuff, I'll say that. My contact in Shymkent brings the same 15% cheaper. But you're local. Add delivery and I'll pay full price.",
@@ -312,7 +314,7 @@ export const CLIENTS: Client[] = [
   },
   {
     id: 'expat_lost', name: 'Kevin (The Expat)', title: 'Software Engineer / Permanently Confused', avatar: '🌍',
-    patience: 'medium', budget: 'medium',
+    patience: 'medium', budget: 'medium', personality: 'friendly',
     preferredItems: ['kazakh_vodka', 'almaty_rock', 'air_nurota', 'medeo_rust'],
     pitchLines: [
       "Hi, sorry, my Russian isn't great. Is this the real price? In Germany this would cost triple. Do you accept card? What's the warranty?",
@@ -321,7 +323,7 @@ export const CLIENTS: Client[] = [
   },
   {
     id: 'gov_worker', name: 'Darkhan (Gov. Employee)', title: 'Dept. of Procurement, Ministry #4', avatar: '🏛️',
-    patience: 'high', budget: 'medium',
+    patience: 'high', budget: 'medium', personality: 'skeptical',
     preferredItems: ['samsung_tv', 'iphone_grey', 'kazakh_vodka', 'energy_drink_stock'],
     pitchLines: [
       "I need this, but my dept. won't approve a supplier without proper documentation. Can you be an official vendor? I'll buy 10 units next quarter.",
@@ -330,7 +332,7 @@ export const CLIENTS: Client[] = [
   },
   {
     id: 'wedding_planner', name: 'Aigul Wedding Planner', title: 'Events Director (Panicking)', avatar: '💒',
-    patience: 'very_low', budget: 'very_high',
+    patience: 'very_low', budget: 'very_high', personality: 'impulsive',
     preferredItems: ['designer_bag', 'rolex_fake', 'wedding_suit', 'caviar_caspian'],
     pitchLines: [
       "The wedding is in THREE DAYS. I need it NOW. Price is secondary. Can you deliver TODAY? Today! Not tomorrow. Today!",
@@ -339,7 +341,7 @@ export const CLIENTS: Client[] = [
   },
   {
     id: 'crypto_bek', name: 'Bekzat Cryptobek', title: 'DeFi Maximalist / Yield Farmer', avatar: '⛏️',
-    patience: 'low', budget: 'high',
+    patience: 'low', budget: 'high', personality: 'impulsive',
     preferredItems: ['gpu_4090', 'crypto_usb', 'crypto_wallet_potential', 'nft_kebab'],
     pitchLines: [
       "Bro, I'll pay in USDT, no bank involved. Market's up 40% this week. Perfect moment. You accept crypto, right? Please say yes.",
@@ -348,7 +350,7 @@ export const CLIENTS: Client[] = [
   },
   {
     id: 'biz_student', name: 'Nurlan (MBA Student)', title: 'Future Billionaire, Currently Broke', avatar: '📚',
-    patience: 'high', budget: 'low',
+    patience: 'high', budget: 'low', personality: 'friendly',
     preferredItems: ['startup_equity', 'nft_kebab', 'almaty_rock', 'air_nurota'],
     pitchLines: [
       "Um, I'm writing a business school case study. Could I buy this at academic discount? I'll mention you positively in the paper.",
@@ -357,7 +359,7 @@ export const CLIENTS: Client[] = [
   },
   {
     id: 'dubai_diaspora', name: 'Arman (Just Back from Dubai)', title: 'Kazakhstani Diaspora, Dubai Branch', avatar: '✈️',
-    patience: 'very_low', budget: 'very_high',
+    patience: 'very_low', budget: 'very_high', personality: 'aggressive',
     preferredItems: ['designer_bag', 'caviar_caspian', 'rolex_fake', 'kazakh_vodka'],
     pitchLines: [
       "In Dubai this costs triple. I'm visiting family and need to stock up. Best price for three? I fly back Sunday.",
@@ -366,7 +368,7 @@ export const CLIENTS: Client[] = [
   },
   {
     id: 'baraholka_veteran', name: 'Uncle Marat', title: 'Baraholka Legend Since 1993', avatar: '🛒',
-    patience: 'very_high', budget: 'medium',
+    patience: 'very_high', budget: 'medium', personality: 'stubborn',
     preferredItems: ['wedding_suit', 'kazakh_vodka', 'samsung_tv', 'shymkent_honey'],
     pitchLines: [
       "I've been buying here since before you were born. My usual guy raised prices. Impress me and I'll bring steady business.",
@@ -375,7 +377,7 @@ export const CLIENTS: Client[] = [
   },
   {
     id: 'tech_officer', name: 'IT Manager Zhanar', title: 'Head of IT, Unnamed Corporation', avatar: '👩‍💼',
-    patience: 'high', budget: 'high',
+    patience: 'high', budget: 'high', personality: 'skeptical',
     preferredItems: ['iphone_grey', 'gpu_4090', 'samsung_tv', 'iphone6_vintage'],
     pitchLines: [
       "We need 5 units for the office. I have a purchase order. Please send specs, warranty, and tax invoice. Two weeks for procurement approval.",
@@ -384,7 +386,7 @@ export const CLIENTS: Client[] = [
   },
   {
     id: 'wedding_mom', name: 'Proud Mama Raushan', title: 'Mother of the Groom, Season One', avatar: '🤱',
-    patience: 'low', budget: 'high',
+    patience: 'low', budget: 'high', personality: 'impulsive',
     preferredItems: ['wedding_suit', 'designer_bag', 'rolex_fake', 'caviar_caspian'],
     pitchLines: [
       "My only son is getting married! He deserves the best! Money is not important! Is it the best? Good. I'll take two.",
@@ -393,11 +395,293 @@ export const CLIENTS: Client[] = [
   },
   {
     id: 'restaurant_owner', name: 'Serikbol (Small Restaurant)', title: 'Owner, "Dastarkhan Plus"', avatar: '🍽️',
-    patience: 'medium', budget: 'medium',
+    patience: 'medium', budget: 'medium', personality: 'friendly',
     preferredItems: ['caviar_caspian', 'kazakh_vodka', 'energy_drink_stock', 'shymkent_honey'],
     pitchLines: [
       "Business is slow this year. Half upfront, rest by Friday? I always pay - ask anyone at the market. Man of my word.",
       "I take good care of my suppliers. Steady orders, every week. Not big money now, but reliable. That's worth something, yes?",
+    ],
+  },
+
+  // ─── 30 NEW CLIENTS ────────────────────────────────────────────────────────
+
+  // AGGRESSIVE (6)
+  {
+    id: 'daniyar_dostyk', name: 'Daniyar (Dostyk Plaza)', title: 'Real Estate Developer', avatar: '💼',
+    patience: 'low', budget: 'very_high', personality: 'aggressive',
+    preferredItems: ['designer_bag', 'rolex_fake', 'gpu_4090', 'crypto_usb'],
+    pitchLines: [
+      "I've built three towers in this city. I don't negotiate — I acquire. Offer me your lowest, or don't waste my PA's time.",
+      "My accountant has ₸2M earmarked for this quarter. Surprise me with a number that isn't an insult.",
+    ],
+  },
+  {
+    id: 'shady_bek', name: 'Shady Reseller Bek', title: 'Grey Market Operator', avatar: '🕶️',
+    patience: 'low', budget: 'medium', personality: 'aggressive',
+    preferredItems: ['samsung_tv', 'iphone_grey', 'kazakh_vodka', 'vip_bazaar_pass'],
+    pitchLines: [
+      "I know your supplier. I know your margins. Don't try to play me. Give me the real price, the one before the markup.",
+      "I move 50 units a week. You give me a good price, I give you volume. You give me a bad price, I go to your competitor. Simple.",
+    ],
+  },
+  {
+    id: 'rustem_cars', name: 'Rustem Car Dealer', title: 'Pre-Owned Auto King', avatar: '🚗',
+    patience: 'low', budget: 'high', personality: 'aggressive',
+    preferredItems: ['samsung_tv', 'gpu_4090', 'iphone_grey', 'energy_drink_stock'],
+    pitchLines: [
+      "In my lot I have 40 cars. I sell them all by making buyers feel they're getting a deal. Don't try the same trick on me.",
+      "Final offer means final offer. I'll say a number once. You think about it. I walk to my G-Wagon. You decide.",
+    ],
+  },
+  {
+    id: 'timur_club', name: 'Timur the Club Owner', title: 'Nightlife Entrepreneur', avatar: '🎵',
+    patience: 'very_low', budget: 'very_high', personality: 'aggressive',
+    preferredItems: ['designer_bag', 'caviar_caspian', 'energy_drink_stock', 'kazakh_vodka'],
+    pitchLines: [
+      "My club opens in 4 hours. I need this now and I pay cash. Don't mention delivery times or I find someone else in 5 minutes.",
+      "Opening night. VIP table. Everything must be perfect. Price is not the issue. Speed is the issue. Can you deliver or not?",
+    ],
+  },
+  {
+    id: 'yermek_jewelry', name: 'Yermek the Jeweler', title: 'Owner, Zhetysu Gold & Gems', avatar: '💎',
+    patience: 'medium', budget: 'high', personality: 'aggressive',
+    preferredItems: ['rolex_fake', 'designer_bag', 'dimash_photo', 'caviar_caspian'],
+    pitchLines: [
+      "I have an eye trained by 20 years in the trade. I see what things are worth. Your price has exactly 30% markup. I'll pay cost plus 10.",
+      "Every piece in my shop, I bought at the right price. I'm not starting a different tradition with you. Be realistic.",
+    ],
+  },
+  {
+    id: 'sergey_construction', name: 'Sergey (Construction)', title: 'Construction Mogul', avatar: '👷',
+    patience: 'low', budget: 'very_high', personality: 'aggressive',
+    preferredItems: ['samsung_tv', 'gpu_4090', 'wedding_suit', 'kazakh_vodka'],
+    pitchLines: [
+      "I build things. Big things. When I want something, I buy it. When someone wastes my time with games, I build my own.",
+      "My site manager just told me you're the third stall today trying to sell this. So I know the market price. Come correct.",
+    ],
+  },
+
+  // SKEPTICAL (6)
+  {
+    id: 'banker_kanat', name: 'Banker Kanat', title: 'Head of Corporate Credit, Halyk', avatar: '🏦',
+    patience: 'high', budget: 'very_high', personality: 'skeptical',
+    preferredItems: ['iphone_grey', 'samsung_tv', 'startup_equity', 'crypto_wallet_potential'],
+    pitchLines: [
+      "Before I decide, I need documentation. Origin, condition report, comparable market sales. I have a process. Let's follow it.",
+      "I financed half the buildings in this district. Every deal I've ever done, I analyzed first. This one is no different.",
+    ],
+  },
+  {
+    id: 'accountant_zhuldyz', name: 'Accountant Zhuldyz', title: 'Head of Finance, SME Division', avatar: '📊',
+    patience: 'high', budget: 'medium', personality: 'skeptical',
+    preferredItems: ['iphone6_vintage', 'nft_kebab', 'almaty_rock', 'startup_equity'],
+    pitchLines: [
+      "I have a spreadsheet open right now showing the real market price of this item. Your number is... interesting. Explain it.",
+      "Every tenge I spend has a justification column. Help me fill it in correctly, and we have a deal. Otherwise, I need a receipt.",
+    ],
+  },
+  {
+    id: 'dauren_customs', name: 'Customs Inspector Dauren', title: 'Senior Inspector, Almaty Checkpoint', avatar: '🔍',
+    patience: 'high', budget: 'medium', personality: 'skeptical',
+    preferredItems: ['kazakh_vodka', 'wedding_suit', 'shymkent_honey', 'samsung_tv'],
+    pitchLines: [
+      "In my job I see everything pass through. I know what's legitimate and what isn't. I'm buying, not inspecting. But old habits.",
+      "I've seen 'authentic' and 'genuine' stamps on boxes that were printed the same morning. Impress me with facts, not adjectives.",
+    ],
+  },
+  {
+    id: 'askar_military', name: 'Retired Colonel Askar', title: 'Ex-Military, Now Consults', avatar: '🎖️',
+    patience: 'high', budget: 'high', personality: 'skeptical',
+    preferredItems: ['samsung_tv', 'kazakh_vodka', 'wedding_suit', 'caviar_caspian'],
+    pitchLines: [
+      "I spent 30 years evaluating intelligence reports. I can tell immediately when someone is padding information. Don't pad.",
+      "State your specifications. State your price. Give me one reason to choose you over the man at the next stall. One reason only.",
+    ],
+  },
+  {
+    id: 'mira_trade', name: 'Trade Analyst Mira', title: 'Import/Export Market Intelligence', avatar: '📈',
+    patience: 'high', budget: 'high', personality: 'skeptical',
+    preferredItems: ['gpu_4090', 'iphone_grey', 'designer_bag', 'crypto_wallet_potential'],
+    pitchLines: [
+      "I track 200 SKUs across Kazakhstan, Russia, and China. I know what this costs landed in Almaty. Your margin is visible to me.",
+      "I don't buy based on pitch. I buy based on value. Show me the value. Not the story. The value.",
+    ],
+  },
+  {
+    id: 'alisher_security', name: 'IT Security Expert Alisher', title: 'Cybersecurity Consultant', avatar: '🔐',
+    patience: 'very_high', budget: 'high', personality: 'skeptical',
+    preferredItems: ['gpu_4090', 'crypto_usb', 'crypto_wallet_potential', 'iphone_grey'],
+    pitchLines: [
+      "I verify everything before trusting it. Firmware, provenance, hash of the contents if digital. We can do this the fast way or the right way.",
+      "Your pitch sounds good. That's actually a red flag. Good pitches are engineered. Give me the boring technical specs instead.",
+    ],
+  },
+
+  // FRIENDLY (6)
+  {
+    id: 'dana_blogger', name: 'Dana (@danadreams)', title: 'Lifestyle Content Creator', avatar: '🌸',
+    patience: 'medium', budget: 'medium', personality: 'friendly',
+    preferredItems: ['designer_bag', 'rolex_fake', 'dimash_photo', 'iphone_grey'],
+    pitchLines: [
+      "Oh this is SO cute! My followers would honestly love this. I'm on a little budget this month but maybe we can work something out?",
+      "I'm not rich or anything but I save up for things I really want. This is one of those. Can we find a price that works for both?",
+    ],
+  },
+  {
+    id: 'rakhmet_pensioner', name: 'Rakhmet-ata', title: 'Retired Schoolteacher, 38 Years', avatar: '👴',
+    patience: 'high', budget: 'very_low', personality: 'friendly',
+    preferredItems: ['kazakh_vodka', 'shymkent_honey', 'samsung_tv', 'wedding_suit'],
+    pitchLines: [
+      "My pension is small, but I always managed to find what I needed here in Baraholka. You remind me of my former students. Good face.",
+      "My grandson's wedding is next month. I want to give something meaningful. I don't have much but what I have, I give honestly.",
+    ],
+  },
+  {
+    id: 'saltanat_teacher', name: 'Teacher Saltanat', title: 'Secondary School, Physics Dept.', avatar: '📚',
+    patience: 'high', budget: 'low', personality: 'friendly',
+    preferredItems: ['iphone6_vintage', 'almaty_rock', 'nft_kebab', 'air_nurota'],
+    pitchLines: [
+      "I know teachers don't earn much — you don't have to say it. But I saved three months for this. Is there any flexibility for a regular buyer?",
+      "My students think I'm out of touch. I want to surprise them. Within a teacher's budget, obviously. Can you help?",
+    ],
+  },
+  {
+    id: 'aigerim_ngo', name: 'Aigerim (NGO)', title: 'Program Officer, Eco-Almaty Foundation', avatar: '🌱',
+    patience: 'medium', budget: 'low', personality: 'friendly',
+    preferredItems: ['air_nurota', 'almaty_rock', 'startup_equity', 'medeo_rust'],
+    pitchLines: [
+      "We're a nonprofit. Every tenge we spend on this comes from grant money that was meant for something else. But it's for a good cause!",
+      "Our office has literally no budget for this. I'm buying it personally as a gift for our director. Please be kind with the price.",
+    ],
+  },
+  {
+    id: 'valentina_babushka', name: 'Valentina-apa', title: 'Retired, Building 14B, Micro-District 8', avatar: '👵',
+    patience: 'very_high', budget: 'very_low', personality: 'friendly',
+    preferredItems: ['shymkent_honey', 'kazakh_vodka', 'wedding_suit', 'samsung_tv'],
+    pitchLines: [
+      "I used to buy from your grandfather's stall, or someone like him. Good people here. I have a little saved. What can you do for me?",
+      "My daughter told me not to come to the bazaar alone. But here I am! I know what things cost. I just want a fair price, like always.",
+    ],
+  },
+  {
+    id: 'gulzat_kinder', name: 'Director Gulzat', title: 'Head of Kindergarten No. 47', avatar: '🏫',
+    patience: 'high', budget: 'medium', personality: 'friendly',
+    preferredItems: ['energy_drink_stock', 'shymkent_honey', 'samsung_tv', 'almaty_rock'],
+    pitchLines: [
+      "We're buying for the staff room, not myself. The parents contributed. I want to make sure we get good value for their trust.",
+      "Our kindergarten runs on goodwill. I try to pass that on when I shop. Honest price, honest deal, everyone happy. Yes?",
+    ],
+  },
+
+  // IMPULSIVE (6)
+  {
+    id: 'arman_startup', name: 'Startup Arman', title: 'Co-Founder, Pivot #4', avatar: '🚀',
+    patience: 'very_low', budget: 'low', personality: 'impulsive',
+    preferredItems: ['startup_equity', 'nft_kebab', 'energy_drink_stock', 'iphone6_vintage'],
+    pitchLines: [
+      "I'm in fundraising mode. Need this for a demo. Yes, I want it. Yes, right now. What's the absolute final price, no games?",
+      "Our runway is 3 weeks. Every decision has to be fast. I like this. I'm buying this. Just tell me the number.",
+    ],
+  },
+  {
+    id: 'zarina_expat', name: 'Zarina (Back from London)', title: 'Returned Expat, Culture Shock Mode', avatar: '✈️',
+    patience: 'low', budget: 'high', personality: 'impulsive',
+    preferredItems: ['almaty_rock', 'air_nurota', 'medeo_rust', 'kazakh_vodka'],
+    pitchLines: [
+      "Oh my god I missed everything here! This is SO Almaty! I'm buying it. Don't even negotiate, I'm buying it right now.",
+      "Five years in London and nothing there had this soul. I want 3. For my flat, for my mum, for my old university friend.",
+    ],
+  },
+  {
+    id: 'kairat_miner', name: 'Kairat (Crypto Rich)', title: 'Former IT Technician, Now Investor', avatar: '🤑',
+    patience: 'very_low', budget: 'very_high', personality: 'impulsive',
+    preferredItems: ['gpu_4090', 'crypto_usb', 'crypto_wallet_potential', 'iphone_grey'],
+    pitchLines: [
+      "My portfolio just hit ₸50M. I buy things I want. I wanted this when I walked past your stall. I still want it. Price?",
+      "Last month I missed a deal and regretted it for two weeks. Not doing that again. Final answer: yes. What's your number?",
+    ],
+  },
+  {
+    id: 'dina_planner', name: 'Event Planner Dina', title: 'Operations Manager, Panic Mode', avatar: '🎉',
+    patience: 'very_low', budget: 'very_high', personality: 'impulsive',
+    preferredItems: ['caviar_caspian', 'wedding_suit', 'designer_bag', 'kazakh_vodka'],
+    pitchLines: [
+      "The event is in 6 hours. Don't talk to me about delivery. I have a car outside. Name the price, I pay, I leave. Now please.",
+      "I don't care about the price. My client cares about quality. Is it good? Yes? Take my card. I'm already calling the next supplier.",
+    ],
+  },
+  {
+    id: 'serik_husband', name: 'Instagram Husband Serik', title: 'Accompanying Spouse, Resigned to Fate', avatar: '😅',
+    patience: 'very_low', budget: 'medium', personality: 'impulsive',
+    preferredItems: ['designer_bag', 'rolex_fake', 'dimash_photo', 'iphone_grey'],
+    pitchLines: [
+      "My wife sent me here with a photo. This is the photo. Is this the item? Great. Price? She said max ₸X. What's your best?",
+      "I have 20 minutes before she calls. I don't understand these things, I just pay. Is this the one she wants or not?",
+    ],
+  },
+  {
+    id: 'nurgul_telecom', name: 'Manager Nurgul (Telecoms)', title: 'Head of Procurement, Kazakhtelecom', avatar: '📱',
+    patience: 'very_low', budget: 'high', personality: 'impulsive',
+    preferredItems: ['iphone_grey', 'samsung_tv', 'gpu_4090', 'energy_drink_stock'],
+    pitchLines: [
+      "I have budget approval until end of quarter. That's 48 hours. I want this item. I am choosing to buy it. Final price?",
+      "Corporate process usually takes 3 weeks. I am skipping the process. You benefit from that. Give me the good price.",
+    ],
+  },
+
+  // STUBBORN (6)
+  {
+    id: 'aisha_bazaar_queen', name: 'Aisha-apa the Bazaar Queen', title: 'Baraholka Institution Since 1995', avatar: '👑',
+    patience: 'very_high', budget: 'very_high', personality: 'stubborn',
+    preferredItems: ['samsung_tv', 'designer_bag', 'caviar_caspian', 'kazakh_vodka'],
+    pitchLines: [
+      "I know this bazaar like my own kitchen. I know what you paid. I know what you need. I'm offering you fair. That's my only offer.",
+      "Child, I sold here when your parents were your age. My price is my price. It has been since Tuesday. It will be on Friday.",
+    ],
+  },
+  {
+    id: 'alibek_merchant', name: 'Old Merchant Alibek', title: 'Baraholka Trader, Class of 1991', avatar: '🧳',
+    patience: 'very_high', budget: 'medium', personality: 'stubborn',
+    preferredItems: ['kazakh_vodka', 'wedding_suit', 'samsung_tv', 'shymkent_honey'],
+    pitchLines: [
+      "I've been buying and selling since before this bazaar had a roof. My offer is based on 30 years of price memory. It's correct.",
+      "You can keep talking. I will keep listening. But my number won't change. It never does. This is not stubbornness. This is expertise.",
+    ],
+  },
+  {
+    id: 'saule_budget', name: 'Budget Manager Saule', title: 'Corporate Finance Controller', avatar: '📋',
+    patience: 'very_high', budget: 'medium', personality: 'stubborn',
+    preferredItems: ['iphone6_vintage', 'nft_kebab', 'startup_equity', 'almaty_rock'],
+    pitchLines: [
+      "The approved budget line for this purchase is ₸X. I cannot go above it. I have tried to go above it. Accounting said no. I say no.",
+      "I submitted the purchase request 3 weeks ago. The amount was approved. That amount is what I am paying. Column A, Row 14.",
+    ],
+  },
+  {
+    id: 'vitaly_pawnshop', name: 'Pawnshop Owner Vitaly', title: 'Owner, 3 Locations Since 2003', avatar: '🏪',
+    patience: 'very_high', budget: 'high', personality: 'stubborn',
+    preferredItems: ['rolex_fake', 'crypto_usb', 'gpu_4090', 'designer_bag'],
+    pitchLines: [
+      "I buy distressed inventory for a living. I know exactly how to value things when someone needs to sell. This is that price.",
+      "I've heard every pitch. I've seen every trick. I have a number in my head and it doesn't move. Think about it. I'll be here.",
+    ],
+  },
+  {
+    id: 'bolat_gov', name: 'State Buyer Bolat', title: 'Senior Procurement Officer, Ministry', avatar: '🏛️',
+    patience: 'very_high', budget: 'medium', personality: 'stubborn',
+    preferredItems: ['samsung_tv', 'iphone_grey', 'kazakh_vodka', 'wedding_suit'],
+    pitchLines: [
+      "Government procurement has a fixed price ceiling for this category. It's set by the committee. I did not set it. I follow it.",
+      "The tender document specifies the maximum unit price. I am not authorized to exceed it. That is the price. Not 1 tenge more.",
+    ],
+  },
+  {
+    id: 'bakhtiyar_pension', name: 'Pension Fund Bakhtiyar', title: 'Asset Manager, UAPF Department 4', avatar: '📑',
+    patience: 'very_high', budget: 'low', personality: 'stubborn',
+    preferredItems: ['almaty_rock', 'air_nurota', 'medeo_rust', 'shymkent_honey'],
+    pitchLines: [
+      "We are a pension fund. Our investment committee approved this specific purchase at this specific amount. It has been documented.",
+      "I presented this purchase proposal to the committee three weeks ago. The amount was voted on. Unanimously. That is my offer.",
     ],
   },
 ];
@@ -701,6 +985,71 @@ export function charismaRejectionReduction(charisma: number): number {
 export const EASY_CLIENT_IDS = new Set([
   'startup_bro', 'office_plankton', 'expat_lost', 'biz_student',
   'restaurant_owner', 'baraholka_veteran', 'gov_worker',
+  'rakhmet_pensioner', 'valentina_babushka', 'gulzat_kinder',
 ]);
 
 export const RAID_COST = 500; // ₸ to send a raid
+
+// ─── Personality negotiation math ────────────────────────────────────────────
+
+/** Opening offer as fraction of item.sellPrice (randomised per personality) */
+export function getPersonalityOpening(personality: ClientPersonality, sellPrice: number): number {
+  let mult: number;
+  switch (personality) {
+    case 'aggressive': mult = 0.30 + Math.random() * 0.10; break;
+    case 'skeptical':  mult = 0.50 + Math.random() * 0.10; break;
+    case 'friendly':   mult = 0.60 + Math.random() * 0.10; break;
+    case 'impulsive':  mult = Math.random() < 0.40 ? 0.95 : 0.40 + Math.random() * 0.40; break;
+    case 'stubborn':   mult = 0.45 + Math.random() * 0.10; break;
+  }
+  return Math.round(sellPrice * mult);
+}
+
+/** Maximum the client will ever agree to pay */
+export function getPersonalityMax(personality: ClientPersonality, sellPrice: number): number {
+  const mults: Record<ClientPersonality, number> = {
+    aggressive: 0.92, skeptical: 0.80, friendly: 0.87, impulsive: 0.96, stubborn: 0.56,
+  };
+  return Math.round(sellPrice * mults[personality]);
+}
+
+/** Starting patience for each personality */
+export const PERSONALITY_PATIENCE: Record<ClientPersonality, number> = {
+  aggressive: 120, skeptical: 80, friendly: 90, impulsive: 50, stubborn: 200,
+};
+
+/** One-line label shown in the UI */
+export const PERSONALITY_LABEL: Record<ClientPersonality, string> = {
+  aggressive: '⚡ AGGRESSIVE', skeptical: '🔍 SKEPTICAL',
+  friendly: '😊 FRIENDLY', impulsive: '🎲 IMPULSIVE', stubborn: '🪨 STUBBORN',
+};
+
+/** Colour for personality badge */
+export const PERSONALITY_COLOR: Record<ClientPersonality, string> = {
+  aggressive: '#ff0040', skeptical: '#0080ff',
+  friendly: '#00ff41', impulsive: '#ffee00', stubborn: '#ff6600',
+};
+
+// ─── Day Scaling ──────────────────────────────────────────────────────────────
+
+export interface DayProfile {
+  /** Personalities allowed for incoming clients; null = all */
+  allowedPersonalities: ClientPersonality[] | null;
+  /** Hard cap on scammers spawned this day */
+  maxScammers: number;
+  /** Whether contracts panel is available */
+  contractsUnlocked: boolean;
+  /** Minimum daily profit to avoid a loss-streak tick */
+  minProfitTarget: number;
+}
+
+export function getDayProfile(day: number): DayProfile {
+  const minProfitTarget = Math.round(40000 * Math.pow(1.1, day - 1));
+  if (day <= 3) {
+    return { allowedPersonalities: ['friendly', 'impulsive'], maxScammers: 0, contractsUnlocked: false, minProfitTarget };
+  }
+  if (day <= 7) {
+    return { allowedPersonalities: null, maxScammers: 2, contractsUnlocked: false, minProfitTarget };
+  }
+  return { allowedPersonalities: null, maxScammers: 4, contractsUnlocked: true, minProfitTarget };
+}

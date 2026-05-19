@@ -1,7 +1,10 @@
 import {
   ITEMS, NPCS, PITCHES, BOSS, CLIENTS, SCAMMERS, CONTRACTS,
   BALANCE_BY_RANK, EASY_CLIENT_IDS, getPlayerRankTier,
-  type Item, type Pitch, type Difficulty, type Contract,
+  charismaRejectionReduction,
+  getPersonalityOpening, getPersonalityMax, PERSONALITY_PATIENCE,
+  getDayProfile,
+  type Item, type Pitch, type Difficulty, type Contract, type ClientPersonality,
 } from './data';
 
 // ─── Sub-interfaces ─────────────────────────────────────────────────────────
@@ -26,6 +29,8 @@ export interface PitchState {
   maxRounds: number;
   npcMood: 'neutral' | 'interested' | 'annoyed';
   active: boolean;
+  fakeScaricityUsed: boolean;
+  nameDropUsed: boolean;
 }
 
 export interface BossState {
@@ -54,7 +59,16 @@ export interface IncomingPitch {
   offeredPrice: number;
   pitchText: string;
   tells: string[];
-  status: 'pending' | 'accepted' | 'declined' | 'scammed';
+  status: 'pending' | 'negotiating' | 'accepted' | 'declined' | 'scammed' | 'callback_pending';
+  // Negotiation state
+  personality: ClientPersonality;
+  clientCurrentOffer: number;
+  clientMaxOffer: number;
+  playerAskPrice: number;
+  patience: number;
+  maxPatience: number;
+  negotiationRound: number;
+  holdFirmCount: number;
 }
 
 export interface ContractSlot {
@@ -66,6 +80,7 @@ export interface ContractSlot {
 
 export interface DailyStats {
   earned: number;
+  costOfGoods: number;
   dealsWon: number;
   dealsFailed: number;
   bestDeal: { amount: number; description: string } | null;
@@ -100,6 +115,9 @@ export interface GameState {
   incomingPitches: IncomingPitch[];
   availableContracts: ContractSlot[];
   completedContracts: string[];
+  focus: number;
+  lossStreak: number;
+  minProfitTarget: number;
   salesCompleted: number;
   pitchesCompleted: number;
   totalEarned: number;
@@ -119,17 +137,24 @@ function randomBossAbility(): string {
 export function generateIncomingPitches(day: number, totalEarned = 0, charisma = 0): IncomingPitch[] {
   const tier = getPlayerRankTier(totalEarned);
   const balance = BALANCE_BY_RANK[tier];
+  const profile = getDayProfile(day);
 
   const count = 3 + Math.floor(Math.random() * 3); // 3–5
   const pitches: IncomingPitch[] = [];
   const usedClientIds = new Set<string>();
+  let scammerCount = 0;
 
-  const clientPool = balance.clientPoolRestrictedToEasy
-    ? CLIENTS.filter((c) => EASY_CLIENT_IDS.has(c.id))
-    : CLIENTS;
+  // Day 1-3: only allowed personalities; otherwise use rank-based pool
+  const basePool = profile.allowedPersonalities
+    ? CLIENTS.filter((c) => (profile.allowedPersonalities as ClientPersonality[]).includes(c.personality))
+    : balance.clientPoolRestrictedToEasy
+      ? CLIENTS.filter((c) => EASY_CLIENT_IDS.has(c.id))
+      : CLIENTS;
 
   for (let i = 0; i < count; i++) {
-    const isScammer = Math.random() < balance.scammerProbability;
+    const canScam = scammerCount < profile.maxScammers;
+    const isScammer = canScam && (Math.random() < balance.scammerProbability);
+    if (isScammer) scammerCount++;
     const item = ITEMS[Math.floor(Math.random() * ITEMS.length)];
 
     if (isScammer) {
@@ -148,16 +173,24 @@ export function generateIncomingPitches(day: number, totalEarned = 0, charisma =
         pitchText: scammer.pitchText,
         tells: scammer.tells,
         status: 'pending',
+        personality: 'impulsive' as ClientPersonality,
+        clientCurrentOffer: offeredPrice,
+        clientMaxOffer: offeredPrice,
+        playerAskPrice: item.sellPrice,
+        patience: 100,
+        maxPatience: 100,
+        negotiationRound: 0,
+        holdFirmCount: 0,
       });
     } else {
-      const available = clientPool.filter((c) => !usedClientIds.has(c.id));
+      const available = basePool.filter((c) => !usedClientIds.has(c.id));
       if (available.length === 0) continue;
       const client = available[Math.floor(Math.random() * available.length)];
       usedClientIds.add(client.id);
-      // Higher charisma = better offers (up to +15%)
-      const charismaBonus = Math.min(0.15, charisma * 0.0015);
-      const multiplier = 0.9 + charismaBonus + Math.random() * 0.25;
-      const offeredPrice = Math.round(item.sellPrice * multiplier);
+      const personality = client.personality;
+      const opening = getPersonalityOpening(personality, item.sellPrice);
+      const maxOffer = getPersonalityMax(personality, item.sellPrice);
+      const pat = PERSONALITY_PATIENCE[personality];
       const line = client.pitchLines[Math.floor(Math.random() * client.pitchLines.length)];
       pitches.push({
         id: `incoming-${day}-${i}-${Date.now()}`,
@@ -168,10 +201,18 @@ export function generateIncomingPitches(day: number, totalEarned = 0, charisma =
         isScammer: false,
         itemId: item.id,
         itemName: item.name,
-        offeredPrice,
+        offeredPrice: opening,
         pitchText: line,
         tells: [],
         status: 'pending',
+        personality,
+        clientCurrentOffer: opening,
+        clientMaxOffer: maxOffer,
+        playerAskPrice: item.sellPrice,
+        patience: pat,
+        maxPatience: pat,
+        negotiationRound: 0,
+        holdFirmCount: 0,
       });
     }
   }
@@ -196,6 +237,14 @@ export function generateRaidScammer(day: number, raiderName: string): IncomingPi
     pitchText: scammer.pitchText,
     tells: scammer.tells,
     status: 'pending',
+    personality: 'impulsive' as ClientPersonality,
+    clientCurrentOffer: offeredPrice,
+    clientMaxOffer: offeredPrice,
+    playerAskPrice: item.sellPrice,
+    patience: 100,
+    maxPatience: 100,
+    negotiationRound: 0,
+    holdFirmCount: 0,
   };
 }
 
@@ -215,7 +264,7 @@ export function generateAvailableContracts(charisma: number, completedContracts:
 // ─── Initial state ──────────────────────────────────────────────────────────
 
 const emptyDailyStats: DailyStats = {
-  earned: 0, dealsWon: 0, dealsFailed: 0,
+  earned: 0, costOfGoods: 0, dealsWon: 0, dealsFailed: 0,
   bestDeal: null, scammersDetected: 0, scammersFooled: 0,
 };
 
@@ -248,6 +297,9 @@ export const initialState: GameState = {
   incomingPitches: [],
   availableContracts: [],
   completedContracts: [],
+  focus: 100,
+  lossStreak: 0,
+  minProfitTarget: getDayProfile(1).minProfitTarget,
   salesCompleted: 0,
   pitchesCompleted: 0,
   totalEarned: 0,
@@ -272,9 +324,12 @@ export type GameAction =
   | { type: 'SELECT_BUY'; itemId: string | null }
   | { type: 'SELECT_SELL'; itemId: string | null }
   | { type: 'START_PITCH'; pitchId: string }
-  | { type: 'NEGOTIATE'; action: 'accept' | 'counter' | 'walk' }
+  | { type: 'NEGOTIATE'; action: 'accept' | 'counter' | 'walk' | 'fake_scarcity' | 'name_drop' }
   | { type: 'DISMISS_PITCH' }
   | { type: 'RESPOND_INCOMING'; pitchId: string; action: 'accept' | 'decline' }
+  | { type: 'START_NEGOTIATION'; pitchId: string }
+  | { type: 'NEGOTIATE_INCOMING'; pitchId: string; action: 'hold_firm' | 'small_discount' | 'big_discount' | 'pitch_value' | 'walk_away' | 'accept' }
+  | { type: 'ACCEPT_CALLBACK'; pitchId: string }
   | { type: 'COUNTER_PITCH'; pitchId: string }
   | { type: 'APPLY_RAID'; raiderName: string }
   | { type: 'PAY_RAID_COST' }
@@ -345,6 +400,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         availableContracts: [],
         boss: initialState.boss,
         dailyStats: emptyDailyStats,
+        minProfitTarget: getDayProfile(d.day ?? 1).minProfitTarget,
         log: [{ id: 'load', type: 'info', message: `Save loaded. Resuming Day ${d.day ?? 1}. Welcome back, Wolf.`, timestamp: Date.now() }],
       };
     }
@@ -356,8 +412,16 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, difficulty: action.difficulty };
 
     case 'BEGIN_DAY': {
+      const profile = getDayProfile(state.day);
       const incoming = generateIncomingPitches(state.day, state.totalEarned, state.charisma);
-      const contracts = generateAvailableContracts(state.charisma, state.completedContracts);
+      const contracts = profile.contractsUnlocked
+        ? generateAvailableContracts(state.charisma, state.completedContracts)
+        : [];
+      const unlockMsg = profile.contractsUnlocked && state.day === 8
+        ? ' Contracts are now unlocked!'
+        : profile.allowedPersonalities
+          ? ' Rookies only today — no scammers yet.'
+          : '';
       return {
         ...state,
         phase: 'sales',
@@ -367,23 +431,38 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         dailyStats: emptyDailyStats,
         activePitch: null,
         activeContract: null,
-        log: addLog(state.log, 'info', `Day ${state.day} begins. ${state.day} incoming clients spotted at the bazaar entrance.`),
+        focus: 100,
+        minProfitTarget: profile.minProfitTarget,
+        log: addLog(state.log, 'info', `Day ${state.day} begins. Target: ₸${profile.minProfitTarget.toLocaleString()}.${unlockMsg}`),
       };
     }
 
     case 'END_DAY': {
       const ls = state.lifetimeStats;
+      const newLs = {
+        ...ls,
+        totalDeals: ls.totalDeals + state.dailyStats.dealsWon,
+        totalEarned: ls.totalEarned + state.dailyStats.earned,
+        daysPlayed: ls.daysPlayed + 1,
+        scammersDetected: ls.scammersDetected + state.dailyStats.scammersDetected,
+        scammersFooled: ls.scammersFooled + state.dailyStats.scammersFooled,
+      };
+      const dailyProfit = state.dailyStats.earned - state.dailyStats.costOfGoods;
+      const newLossStreak = dailyProfit < state.minProfitTarget ? state.lossStreak + 1 : 0;
+      if (newLossStreak >= 3) {
+        return {
+          ...state,
+          phase: 'defeat',
+          lossStreak: newLossStreak,
+          lifetimeStats: newLs,
+          log: addLog(state.log, 'failure', '💀 THREE CONSECUTIVE LOSS DAYS. Your investors pulled out. The market has spoken. You\'re fired, Wolf.'),
+        };
+      }
       return {
         ...state,
         phase: 'day_end',
-        lifetimeStats: {
-          ...ls,
-          totalDeals: ls.totalDeals + state.dailyStats.dealsWon,
-          totalEarned: ls.totalEarned + state.dailyStats.earned,
-          daysPlayed: ls.daysPlayed + 1,
-          scammersDetected: ls.scammersDetected + state.dailyStats.scammersDetected,
-          scammersFooled: ls.scammersFooled + state.dailyStats.scammersFooled,
-        },
+        lossStreak: newLossStreak,
+        lifetimeStats: newLs,
       };
     }
 
@@ -452,12 +531,14 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         tenge: state.tenge + revenue,
         reputation: Math.min(100, state.reputation + repGain),
         charisma: Math.min(100, state.charisma + charismaGain),
+        focus: Math.min(100, state.focus + 10),
         inventory: newInventory,
         salesCompleted: state.salesCompleted + 1,
         totalEarned: state.totalEarned + revenue,
         dailyStats: {
           ...ds,
           earned: ds.earned + revenue,
+          costOfGoods: ds.costOfGoods + item.buyPrice * action.quantity,
           dealsWon: ds.dealsWon + 1,
           bestDeal: updateBestDeal(ds.bestDeal, revenue, `${action.quantity}x ${item.name}`),
         },
@@ -481,7 +562,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       }
       return {
         ...state,
-        activePitch: { pitchId: action.pitchId, currentOffer: pitch.basePrice, round: 1, maxRounds: pitch.negotiationRounds, npcMood: 'neutral', active: true },
+        activePitch: { pitchId: action.pitchId, currentOffer: pitch.basePrice, round: 1, maxRounds: pitch.negotiationRounds, npcMood: 'neutral', active: true, fakeScaricityUsed: false, nameDropUsed: false },
         log: addLog(state.log, 'info', `${npc.name}: "${npc.dialogues.greeting}"`),
       };
     }
@@ -509,18 +590,22 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           tenge: state.tenge + finalPrice,
           reputation: Math.min(100, state.reputation + Math.floor(finalPrice / 30000) + 5),
           charisma: Math.min(100, state.charisma + charismaGain),
+          focus: Math.min(100, state.focus + 5),
           inventory: newInventory,
           activePitch: null,
           pitchesCompleted: state.pitchesCompleted + 1,
           totalEarned: state.totalEarned + finalPrice,
-          dailyStats: { ...ds, earned: ds.earned + finalPrice, dealsWon: ds.dealsWon + 1, bestDeal: updateBestDeal(ds.bestDeal, finalPrice, `Pitch: ${npc.name}`) },
+          dailyStats: { ...ds, earned: ds.earned + finalPrice, costOfGoods: ds.costOfGoods + (getItemById(pitch.itemId)?.buyPrice ?? 0), dealsWon: ds.dealsWon + 1, bestDeal: updateBestDeal(ds.bestDeal, finalPrice, `Pitch: ${npc.name}`) },
           log: addLog(state.log, 'success', `DEAL CLOSED with ${npc.name}! ₸${finalPrice.toLocaleString()} secured. "${npc.dialogues.deal}"`),
         };
       }
 
       if (action.action === 'counter') {
         if (ap.round >= ap.maxRounds) {
-          const rejected = Math.random() < 0.4;
+          const tier = getPlayerRankTier(state.totalEarned);
+          const rankReduction = BALANCE_BY_RANK[tier].negotiationRejectionReduction;
+          const rejectChance = Math.max(0.05, 0.4 - charismaRejectionReduction(state.charisma) - rankReduction);
+          const rejected = Math.random() < rejectChance;
           if (rejected) {
             const ds = state.dailyStats;
             return { ...state, activePitch: null, reputation: Math.max(0, state.reputation - 3), dailyStats: { ...ds, dealsFailed: ds.dealsFailed + 1 }, log: addLog(state.log, 'failure', `${npc.name} walked out. "${npc.dialogues.rejected}"`) };
@@ -533,11 +618,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
             tenge: state.tenge + finalPrice,
             reputation: Math.min(100, state.reputation + 5),
             charisma: Math.min(100, state.charisma + 2),
+            focus: Math.min(100, state.focus + 5),
             inventory: newInventory,
             activePitch: null,
             pitchesCompleted: state.pitchesCompleted + 1,
             totalEarned: state.totalEarned + finalPrice,
-            dailyStats: { ...ds, earned: ds.earned + finalPrice, dealsWon: ds.dealsWon + 1, bestDeal: updateBestDeal(ds.bestDeal, finalPrice, `Pitch: ${npc.name}`) },
+            dailyStats: { ...ds, earned: ds.earned + finalPrice, costOfGoods: ds.costOfGoods + (getItemById(pitch.itemId)?.buyPrice ?? 0), dealsWon: ds.dealsWon + 1, bestDeal: updateBestDeal(ds.bestDeal, finalPrice, `Pitch: ${npc.name}`) },
             log: addLog(state.log, 'success', `${npc.name} caved! ₸${finalPrice.toLocaleString()} closed. "${npc.dialogues.deal}"`),
           };
         }
@@ -549,6 +635,44 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           log: addLog(state.log, 'info', `${npc.name} counters: ₸${newOffer.toLocaleString()}. "${npc.dialogues.interested}"`),
         };
       }
+
+      if (action.action === 'fake_scarcity') {
+        if (ap.fakeScaricityUsed) {
+          return { ...state, log: addLog(state.log, 'warning', `${npc.name} has heard the "other buyer" line already.`) };
+        }
+        if (state.focus < 20) {
+          return { ...state, log: addLog(state.log, 'failure', `Not enough Focus. Need 20, have ${state.focus}.`) };
+        }
+        const newOffer = Math.round(ap.currentOffer * 1.08);
+        const newMood = ap.npcMood === 'annoyed' ? 'annoyed' as const : 'interested' as const;
+        return {
+          ...state,
+          focus: Math.max(0, state.focus - 20),
+          activePitch: { ...ap, currentOffer: newOffer, fakeScaricityUsed: true, npcMood: newMood },
+          log: addLog(state.log, 'success', `📢 "Got another call on this 5 min ago." ${npc.name} shifts in their seat. ↑8% → ₸${newOffer.toLocaleString()}.`),
+        };
+      }
+
+      if (action.action === 'name_drop') {
+        if (ap.nameDropUsed) {
+          return { ...state, log: addLog(state.log, 'warning', `${npc.name}: "You've already name-dropped. Twice is desperate."`) };
+        }
+        if (state.focus < 25) {
+          return { ...state, log: addLog(state.log, 'failure', `Not enough Focus. Need 25, have ${state.focus}.`) };
+        }
+        if (state.charisma < 15) {
+          return { ...state, log: addLog(state.log, 'failure', `Need 15 Charisma to Name-Drop. You have ${state.charisma}.`) };
+        }
+        const bonus = Math.min(0.15, 0.05 + state.charisma * 0.002);
+        const newOffer = Math.round(ap.currentOffer * (1 + bonus));
+        return {
+          ...state,
+          focus: Math.max(0, state.focus - 25),
+          activePitch: { ...ap, currentOffer: newOffer, nameDropUsed: true, npcMood: 'interested' as const },
+          log: addLog(state.log, 'success', `✨ Name-Drop lands perfectly. ${npc.name} leans in. +${Math.round(bonus * 100)}% → ₸${newOffer.toLocaleString()}.`),
+        };
+      }
+
       return state;
     }
 
@@ -559,7 +683,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'RESPOND_INCOMING': {
       const incomingPitch = state.incomingPitches.find((p) => p.id === action.pitchId);
-      if (!incomingPitch || incomingPitch.status !== 'pending') return state;
+      if (!incomingPitch || (incomingPitch.status !== 'pending' && incomingPitch.status !== 'callback_pending')) return state;
 
       if (action.action === 'decline') {
         const updatedPitches = state.incomingPitches.map((p) => p.id === action.pitchId ? { ...p, status: 'declined' as const } : p);
@@ -621,15 +745,234 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         tenge: state.tenge + price,
         reputation: Math.min(100, state.reputation + 1),
         charisma: Math.min(100, state.charisma + charismaGain),
+        focus: Math.min(100, state.focus + 10),
         inventory: newInventory,
         incomingPitches: state.incomingPitches.map((p) => p.id === action.pitchId ? { ...p, status: 'accepted' as const } : p),
         totalEarned: state.totalEarned + price,
         salesCompleted: state.salesCompleted + 1,
         dailyStats: {
-          ...ds, earned: ds.earned + price, dealsWon: ds.dealsWon + 1,
+          ...ds, earned: ds.earned + price, costOfGoods: ds.costOfGoods + (item?.buyPrice ?? 0), dealsWon: ds.dealsWon + 1,
           bestDeal: updateBestDeal(ds.bestDeal, price, `${incomingPitch.sourceName} → ${incomingPitch.itemName}`),
         },
         log: addLog(state.log, profit > 0 ? 'success' : 'warning', `Sold ${incomingPitch.itemName} to ${incomingPitch.sourceName} for ₸${price.toLocaleString()}.`),
+      };
+    }
+
+    case 'START_NEGOTIATION': {
+      const inPitch = state.incomingPitches.find((p) => p.id === action.pitchId);
+      if (!inPitch || inPitch.status !== 'pending') return state;
+      const inItem = getItemById(inPitch.itemId);
+      if (!inItem) return state;
+
+      // Impulsive: 40% instant buy at player's ask price
+      if (inPitch.personality === 'impulsive' && Math.random() < 0.40) {
+        if (!hasSufficientItem(state.inventory, inPitch.itemId, 1)) {
+          return { ...state, log: addLog(state.log, 'failure', `${inPitch.sourceName} was ready to buy instantly — but you have no stock!`) };
+        }
+        const salePrice = inPitch.playerAskPrice;
+        const profit = salePrice - inItem.buyPrice;
+        const newInv = state.inventory
+          .map((i) => i.itemId === inPitch.itemId ? { ...i, quantity: i.quantity - 1 } : i)
+          .filter((i) => i.quantity > 0);
+        const ds = state.dailyStats;
+        return {
+          ...state,
+          tenge: state.tenge + salePrice,
+          charisma: Math.min(100, state.charisma + Math.max(1, Math.floor(salePrice / 80000))),
+          focus: Math.min(100, state.focus + 5),
+          inventory: newInv,
+          incomingPitches: state.incomingPitches.map((p) => p.id === action.pitchId ? { ...p, status: 'accepted' as const } : p),
+          totalEarned: state.totalEarned + salePrice,
+          salesCompleted: state.salesCompleted + 1,
+          dailyStats: {
+            ...ds, earned: ds.earned + salePrice, dealsWon: ds.dealsWon + 1,
+            costOfGoods: ds.costOfGoods + inItem.buyPrice,
+            bestDeal: updateBestDeal(ds.bestDeal, salePrice, `${inPitch.sourceName} (impulsive!) → ${inPitch.itemName}`),
+          },
+          log: addLog(state.log, profit >= 0 ? 'success' : 'warning', `⚡ ${inPitch.sourceName} didn't even blink — INSTANT BUY at ₸${salePrice.toLocaleString()}!`),
+        };
+      }
+
+      return {
+        ...state,
+        incomingPitches: state.incomingPitches.map((p) => p.id === action.pitchId ? { ...p, status: 'negotiating' as const } : p),
+        log: addLog(state.log, 'info', `Negotiating with ${inPitch.sourceName}. Opening offer: ₸${inPitch.clientCurrentOffer.toLocaleString()}.`),
+      };
+    }
+
+    case 'NEGOTIATE_INCOMING': {
+      const np = state.incomingPitches.find((p) => p.id === action.pitchId);
+      if (!np || np.status !== 'negotiating') return state;
+      const npItem = getItemById(np.itemId);
+      if (!npItem) return state;
+
+      const execSale = (salePrice: number, note: string, focusAfterCost = state.focus): GameState => {
+        if (!hasSufficientItem(state.inventory, np.itemId, 1)) {
+          return { ...state, log: addLog(state.log, 'failure', `No stock of ${np.itemName} to sell.`) };
+        }
+        const profit = salePrice - npItem.buyPrice;
+        const newInv = state.inventory
+          .map((i) => i.itemId === np.itemId ? { ...i, quantity: i.quantity - 1 } : i)
+          .filter((i) => i.quantity > 0);
+        const ds = state.dailyStats;
+        return {
+          ...state,
+          tenge: state.tenge + salePrice,
+          reputation: Math.min(100, state.reputation + 1),
+          charisma: Math.min(100, state.charisma + Math.max(1, Math.floor(salePrice / 80000))),
+          focus: Math.min(100, focusAfterCost + 5),
+          inventory: newInv,
+          incomingPitches: state.incomingPitches.map((p) => p.id === action.pitchId ? { ...p, status: 'accepted' as const } : p),
+          totalEarned: state.totalEarned + salePrice,
+          salesCompleted: state.salesCompleted + 1,
+          dailyStats: {
+            ...ds, earned: ds.earned + salePrice, dealsWon: ds.dealsWon + 1,
+            costOfGoods: ds.costOfGoods + npItem.buyPrice,
+            bestDeal: updateBestDeal(ds.bestDeal, salePrice, `${np.sourceName} → ${np.itemName}`),
+          },
+          log: addLog(state.log, profit >= 0 ? 'success' : 'warning', note),
+        };
+      };
+
+      if (action.action === 'accept') {
+        return execSale(np.clientCurrentOffer, `✅ Accepted ${np.sourceName}'s offer: ₸${np.clientCurrentOffer.toLocaleString()}.`);
+      }
+
+      if (action.action === 'walk_away') {
+        if (Math.random() < 0.30) {
+          const cbOffer = Math.round(Math.min(np.clientMaxOffer * 1.05, npItem.sellPrice * 0.95));
+          return {
+            ...state,
+            incomingPitches: state.incomingPitches.map((p) =>
+              p.id === action.pitchId ? { ...p, status: 'callback_pending' as const, clientCurrentOffer: cbOffer } : p
+            ),
+            log: addLog(state.log, 'info', `${np.sourceName} ran after you: "Wait — ₸${cbOffer.toLocaleString()}?" CALLBACK pending.`),
+          };
+        }
+        const ds = state.dailyStats;
+        return {
+          ...state,
+          incomingPitches: state.incomingPitches.map((p) => p.id === action.pitchId ? { ...p, status: 'declined' as const } : p),
+          dailyStats: { ...ds, dealsFailed: ds.dealsFailed + 1 },
+          log: addLog(state.log, 'warning', `Walked away from ${np.sourceName}. No callback.`),
+        };
+      }
+
+      // hold_firm / small_discount / big_discount / pitch_value
+      let newPatience = np.patience;
+      let newClientOffer = np.clientCurrentOffer;
+      let newPlayerAsk = np.playerAskPrice;
+      let newHoldFirmCount = np.holdFirmCount;
+      const newRound = np.negotiationRound + 1;
+      let focusCost = 0;
+      let logMsg = '';
+      const gap = np.clientMaxOffer - np.clientCurrentOffer;
+
+      if (action.action === 'hold_firm') {
+        newHoldFirmCount = np.holdFirmCount + 1;
+        newPatience -= np.personality === 'aggressive' ? 5 : 15;
+        if (np.personality === 'aggressive' && newHoldFirmCount >= 2) {
+          newClientOffer = Math.round(npItem.sellPrice * 0.90);
+        } else if (np.personality !== 'stubborn') {
+          newClientOffer = Math.round(np.clientCurrentOffer + gap * 0.05);
+        }
+        logMsg = `Held firm at ₸${newPlayerAsk.toLocaleString()}. ${np.sourceName} moves to ₸${newClientOffer.toLocaleString()}.`;
+      } else if (action.action === 'small_discount') {
+        newPlayerAsk = Math.round(np.playerAskPrice * 0.90);
+        newPatience -= 5;
+        newClientOffer = Math.round(np.clientCurrentOffer + gap * (np.personality === 'stubborn' ? 0.02 : 0.15));
+        logMsg = `Offered −10%: ₸${newPlayerAsk.toLocaleString()}. ${np.sourceName} moves to ₸${newClientOffer.toLocaleString()}.`;
+      } else if (action.action === 'big_discount') {
+        newPlayerAsk = Math.round(np.playerAskPrice * 0.75);
+        newPatience -= 5;
+        newClientOffer = Math.round(np.clientCurrentOffer + gap * (np.personality === 'stubborn' ? 0.05 : 0.30));
+        logMsg = `Offered −25%: ₸${newPlayerAsk.toLocaleString()}. ${np.sourceName} moves to ₸${newClientOffer.toLocaleString()}.`;
+      } else if (action.action === 'pitch_value') {
+        focusCost = 25;
+        if (state.focus < focusCost) {
+          return { ...state, log: addLog(state.log, 'failure', `Not enough Focus. Need ${focusCost}, have ${state.focus}.`) };
+        }
+        newPatience -= np.personality === 'skeptical' ? 15 : 5;
+        if (np.personality !== 'skeptical') {
+          newClientOffer = Math.round(np.clientCurrentOffer + gap * 0.20);
+          logMsg = `🎤 Value pitch lands! ${np.sourceName} moves to ₸${newClientOffer.toLocaleString()}.`;
+        } else {
+          logMsg = `${np.sourceName} shrugs. "Numbers don't lie, but salesmen do." No movement.`;
+        }
+      }
+
+      // Scammer tell: on round ≥ 2, they match your ask exactly (too eager = red flag)
+      if (np.isScammer && newRound >= 2) {
+        newClientOffer = newPlayerAsk;
+      }
+
+      const newFocus = Math.max(0, state.focus - focusCost);
+
+      // Auto-close: prices have met
+      if (newPlayerAsk <= newClientOffer) {
+        return execSale(
+          newClientOffer,
+          `✅ DEAL CLOSED! Prices met. ${np.sourceName} pays ₸${newClientOffer.toLocaleString()}.`,
+          newFocus,
+        );
+      }
+
+      // Patience exhausted: client leaves
+      if (newPatience <= 0) {
+        const ds = state.dailyStats;
+        return {
+          ...state,
+          focus: newFocus,
+          incomingPitches: state.incomingPitches.map((p) =>
+            p.id === action.pitchId ? { ...p, status: 'declined' as const, patience: 0 } : p
+          ),
+          dailyStats: { ...ds, dealsFailed: ds.dealsFailed + 1 },
+          log: addLog(state.log, 'warning', `${np.sourceName} lost patience and walked out.`),
+        };
+      }
+
+      return {
+        ...state,
+        focus: newFocus,
+        incomingPitches: state.incomingPitches.map((p) =>
+          p.id === action.pitchId
+            ? { ...p, patience: newPatience, clientCurrentOffer: newClientOffer, playerAskPrice: newPlayerAsk, negotiationRound: newRound, holdFirmCount: newHoldFirmCount }
+            : p
+        ),
+        log: addLog(state.log, 'info', logMsg),
+      };
+    }
+
+    case 'ACCEPT_CALLBACK': {
+      const cbPitch = state.incomingPitches.find((p) => p.id === action.pitchId);
+      if (!cbPitch || cbPitch.status !== 'callback_pending') return state;
+      const cbItem = getItemById(cbPitch.itemId);
+      if (!cbItem) return state;
+      if (!hasSufficientItem(state.inventory, cbPitch.itemId, 1)) {
+        return { ...state, log: addLog(state.log, 'failure', `No stock of ${cbPitch.itemName} for ${cbPitch.sourceName}'s callback.`) };
+      }
+      const cbPrice = cbPitch.clientCurrentOffer;
+      const cbProfit = cbPrice - cbItem.buyPrice;
+      const newInv = state.inventory
+        .map((i) => i.itemId === cbPitch.itemId ? { ...i, quantity: i.quantity - 1 } : i)
+        .filter((i) => i.quantity > 0);
+      const ds = state.dailyStats;
+      return {
+        ...state,
+        tenge: state.tenge + cbPrice,
+        reputation: Math.min(100, state.reputation + 2),
+        charisma: Math.min(100, state.charisma + Math.max(1, Math.floor(cbPrice / 80000))),
+        focus: Math.min(100, state.focus + 5),
+        inventory: newInv,
+        incomingPitches: state.incomingPitches.map((p) => p.id === action.pitchId ? { ...p, status: 'accepted' as const } : p),
+        totalEarned: state.totalEarned + cbPrice,
+        salesCompleted: state.salesCompleted + 1,
+        dailyStats: {
+          ...ds, earned: ds.earned + cbPrice, dealsWon: ds.dealsWon + 1,
+          costOfGoods: ds.costOfGoods + cbItem.buyPrice,
+          bestDeal: updateBestDeal(ds.bestDeal, cbPrice, `${cbPitch.sourceName} callback → ${cbPitch.itemName}`),
+        },
+        log: addLog(state.log, cbProfit >= 0 ? 'success' : 'warning', `📞 CALLBACK ACCEPTED: ${cbPitch.sourceName} pays ₸${cbPrice.toLocaleString()}.`),
       };
     }
 
@@ -659,6 +1002,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         dailyStats: {
           ...ds,
           earned: ds.earned + counterValue,
+          costOfGoods: ds.costOfGoods + (getItemById(pitch.itemId)?.buyPrice ?? 0),
           dealsWon: ds.dealsWon + 1,
           scammersDetected: ds.scammersDetected + 1,
           bestDeal: updateBestDeal(ds.bestDeal, counterValue, `COUNTER-PITCH vs ${pitch.sourceName}`),

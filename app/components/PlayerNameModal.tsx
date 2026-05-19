@@ -17,16 +17,16 @@ export default function PlayerNameModal({ onConfirm }: PlayerNameModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.85)' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
+        initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="panel p-6 max-w-sm w-full mx-4"
-        style={{ boxShadow: '0 0 40px rgba(0,255,65,0.3)' }}
+        className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 border border-[#e8e6e1]"
+        style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
       >
         <div className="text-4xl text-center mb-4">🐺</div>
-        <div className="neon-green text-sm font-bold text-center mb-1">ENTER YOUR STREET NAME</div>
-        <div className="text-[10px] text-[#555] text-center mb-4">Shown on the live leaderboard to other players</div>
+        <div className="text-sm font-semibold text-[#1a1a1a] text-center mb-1">Enter your street name</div>
+        <div className="text-[10px] text-[#9ca3af] text-center mb-4">Shown on the live leaderboard to other players</div>
 
         <input
           type="text"
@@ -36,16 +36,15 @@ export default function PlayerNameModal({ onConfirm }: PlayerNameModalProps) {
           placeholder="NurBoss99..."
           maxLength={20}
           autoFocus
-          className="w-full bg-[#0a0a0a] border-2 border-[#00ff41] text-[#00ff41] px-3 py-2 text-sm font-mono mb-1 outline-none focus:border-[#ffee00] transition-colors"
-          style={{ caretColor: '#00ff41' }}
+          className="w-full bg-[#f7f6f3] border border-[#e8e6e1] rounded-xl px-3 py-2.5 text-sm text-[#1a1a1a] mb-1 outline-none focus:border-[#1a1a1a] transition-colors"
         />
-        <div className="text-[9px] text-[#444] text-right mb-4">{name.length}/20</div>
+        <div className="text-[9px] text-[#9ca3af] text-right mb-4">{name.length}/20</div>
 
         <button
-          className="btn-brutal btn-green w-full py-3 text-sm"
+          className="w-full py-3 bg-[#1a1a1a] text-white font-semibold rounded-xl hover:bg-[#2d2d2d] transition-colors text-sm"
           onClick={handleConfirm}
         >
-          ENTER THE MARKET
+          Enter the Market →
         </button>
       </motion.div>
     </div>

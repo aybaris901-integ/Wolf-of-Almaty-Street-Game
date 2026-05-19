@@ -7,6 +7,9 @@ export interface SaveData {
   tenge: number;
   reputation: number;
   charisma: number;
+  focus: number;
+  lossStreak: number;
+  minProfitTarget: number;
   inventory: GameState['inventory'];
   day: number;
   difficulty: Difficulty | null;
@@ -25,6 +28,9 @@ export function saveGame(state: GameState): void {
       tenge: state.tenge,
       reputation: state.reputation,
       charisma: state.charisma,
+      focus: state.focus,
+      lossStreak: state.lossStreak,
+      minProfitTarget: state.minProfitTarget,
       inventory: state.inventory,
       day: state.day,
       difficulty: state.difficulty,

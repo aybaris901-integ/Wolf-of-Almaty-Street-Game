@@ -1,321 +1,202 @@
 'use client';
-import { useReducer, useCallback, useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { gameReducer, initialState } from './game/state';
-import { saveGame, loadSave, clearSave } from './game/saveSystem';
-import { DIFFICULTY_SECONDS, RAID_COST, type Difficulty } from './game/data';
-import { useGameTimer } from './hooks/useGameTimer';
-import { useMultiplayer, hasPlayerName } from './hooks/useMultiplayer';
-import { isSupabaseConfigured } from './lib/supabase';
-import StatsPanel from './components/StatsPanel';
-import TradingTerminal from './components/TradingTerminal';
-import BossArena from './components/BossArena';
-import NPCRoster from './components/NPCRoster';
-import ActivityLog from './components/ActivityLog';
-import IntroScreen from './components/IntroScreen';
-import ContinueScreen from './components/ContinueScreen';
-import DayStartScreen from './components/DayStartScreen';
-import DayEndModal from './components/DayEndModal';
-import EndScreen from './components/EndScreen';
-import LiveLeaderboard from './components/LiveLeaderboard';
-import PlayerNameModal from './components/PlayerNameModal';
-import RaidNotification, { type RaidAlert } from './components/RaidNotification';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { loadSave, clearSave, type SaveData } from './game/saveSystem';
+import { MARKET_TICKERS } from './game/data';
+import { supabase, isSupabaseConfigured, type LeaderboardEntry } from './lib/supabase';
 
-type AppScreen = 'loading' | 'continue' | 'intro' | 'game';
+export default function MainMenu() {
+  const router = useRouter();
+  const [save, setSave] = useState<SaveData | null>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [mounted, setMounted] = useState(false);
 
-export default function Home() {
-  const [state, dispatch] = useReducer(gameReducer, initialState);
-  const [screen, setScreen] = useState<AppScreen>('loading');
-  const [showNameModal, setShowNameModal] = useState(false);
-  const [raidAlerts, setRaidAlerts] = useState<RaidAlert[]>([]);
-  const savedData = useRef(loadSave());
-
-  // Auto-save after every state change
   useEffect(() => {
-    if (state.phase !== 'intro' && state.phase !== 'day_start') {
-      saveGame(state);
-    }
-  }, [state]);
-
-  // Initial load check
-  useEffect(() => {
-    const save = loadSave();
-    savedData.current = save;
-    if (save) {
-      setScreen('continue');
-    } else {
-      setScreen('intro');
-    }
+    setSave(loadSave());
+    setMounted(true);
   }, []);
 
-  // Multiplayer
-  const handleRaidReceived = useCallback((raiderId: string, raiderName: string) => {
-    dispatch({ type: 'APPLY_RAID', raiderName });
-    const alert: RaidAlert = { id: `${Date.now()}-${raiderId}`, raiderId, raiderName, timestamp: Date.now() };
-    setRaidAlerts((prev) => [...prev, alert]);
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+    supabase
+      .from('leaderboard')
+      .select('*')
+      .order('daily_earnings', { ascending: false })
+      .limit(3)
+      .then(({ data }) => { if (data) setLeaderboard(data as LeaderboardEntry[]); });
   }, []);
 
-  const { playerId, playerName, leaderboard, connected, publishScore, sendRaid } = useMultiplayer({
-    onRaidReceived: handleRaidReceived,
-  });
-
-  // Show name modal once Supabase is configured and we're in the game
-  useEffect(() => {
-    if (isSupabaseConfigured && screen === 'game' && !hasPlayerName()) {
-      setShowNameModal(true);
-    }
-  }, [screen]);
-
-  // Publish score when day ends
-  const prevPhaseRef = useRef(state.phase);
-  useEffect(() => {
-    if (prevPhaseRef.current === 'sales' && state.phase === 'day_end') {
-      publishScore(state.dailyStats.earned, state.totalEarned, state.day);
-    }
-    prevPhaseRef.current = state.phase;
-  }, [state.phase, state.dailyStats.earned, state.totalEarned, state.day, publishScore]);
-
-  // Timer — calls END_DAY when it expires
-  const handleTimerExpire = useCallback(() => {
-    dispatch({ type: 'END_DAY' });
-  }, []);
-  const timer = useGameTimer(handleTimerExpire);
-
-  // Start the timer when BEGIN_DAY fires and phase becomes 'sales'
-  const prevPhase = useRef(state.phase);
-  useEffect(() => {
-    if (prevPhase.current !== 'sales' && state.phase === 'sales' && state.difficulty) {
-      timer.start(DIFFICULTY_SECONDS[state.difficulty]);
-    }
-    if (state.phase === 'day_end' || state.phase === 'boss') {
-      timer.stop();
-    }
-    prevPhase.current = state.phase;
-  }, [state.phase, state.difficulty, timer]);
-
-  // ─── Handlers ──────────────────────────────────────────────────────────────
-
-  const handleContinue = useCallback(() => {
-    const save = savedData.current;
-    if (!save) return;
-    dispatch({ type: 'LOAD_SAVE', data: save });
-    setScreen('game');
-  }, []);
-
-  const handleNewGame = useCallback(() => {
+  const handleNewGame = () => {
     clearSave();
-    setScreen('intro');
-  }, []);
+    router.push('/game');
+  };
 
-  const handleIntroStart = useCallback(() => {
-    dispatch({ type: 'START_GAME' });
-    setScreen('game');
-  }, []);
+  const handleContinue = () => {
+    router.push('/game');
+  };
 
-  const handleSetDifficulty = useCallback((d: Difficulty) => {
-    dispatch({ type: 'SET_DIFFICULTY', difficulty: d });
-  }, []);
+  const tickerItems = isSupabaseConfigured && leaderboard.length > 0
+    ? leaderboard.map(e => `${e.player_name} earned ₸${e.daily_earnings.toLocaleString()} today`)
+    : MARKET_TICKERS;
 
-  const handleBeginDay = useCallback(() => {
-    dispatch({ type: 'BEGIN_DAY' });
-  }, []);
-
-  const handleEndDayEarly = useCallback(() => {
-    timer.stop();
-    dispatch({ type: 'END_DAY' });
-  }, [timer]);
-
-  const handleNextDay = useCallback(() => {
-    dispatch({ type: 'NEXT_DAY' });
-  }, []);
-
-  const handleStartBoss = useCallback(() => {
-    timer.stop();
-    dispatch({ type: 'START_BOSS' });
-  }, [timer]);
-
-  const handleRestart = useCallback(() => {
-    clearSave();
-    window.location.reload();
-  }, []);
-
-  const handleRaid = useCallback((targetId: string, _targetName: string) => {
-    if (state.tenge < RAID_COST) return;
-    dispatch({ type: 'PAY_RAID_COST' });
-    sendRaid(targetId);
-  }, [state.tenge, sendRaid]);
-
-  const handleDismissRaid = useCallback((id: string) => {
-    setRaidAlerts((prev) => prev.filter((r) => r.id !== id));
-  }, []);
-
-  // ─── Screen routing ─────────────────────────────────────────────────────────
-
-  if (screen === 'loading') {
-    return <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]"><div className="neon-green text-xs cursor-blink">LOADING</div></div>;
-  }
-
-  if (screen === 'continue' && savedData.current) {
-    return <ContinueScreen save={savedData.current} onContinue={handleContinue} onNewGame={handleNewGame} />;
-  }
-
-  if (screen === 'intro' && state.phase === 'intro') {
-    return <IntroScreen onStart={handleIntroStart} />;
-  }
-
-  if (state.phase === 'day_start') {
-    return (
-      <DayStartScreen
-        state={state}
-        onSetDifficulty={handleSetDifficulty}
-        onBeginDay={handleBeginDay}
-      />
-    );
-  }
-
-  if (state.phase === 'day_end') {
-    return (
-      <DayEndModal
-        day={state.day}
-        stats={state.dailyStats}
-        leaderboard={leaderboard}
-        onNextDay={handleNextDay}
-      />
-    );
-  }
-
-  if (state.phase === 'victory' || state.phase === 'defeat') {
-    return <EndScreen state={state} onRestart={handleRestart} />;
-  }
-
-  // ─── Main game dashboard ────────────────────────────────────────────────────
-
-  const isBossPhase = state.phase === 'boss';
-
-  const timerPct = state.difficulty && timer.seconds > 0
-    ? timer.seconds / DIFFICULTY_SECONDS[state.difficulty] * 100
-    : 100;
-  const timerColor = timerPct <= 25 ? '#ff0040' : timerPct <= 50 ? '#ffee00' : '#00ff41';
+  const tickerText = tickerItems.join('   ·   ') + '   ·   ' + tickerItems.join('   ·   ') + '   ·   ';
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-[#0a0a0a]">
-      {/* Player name modal */}
-      {showNameModal && (
-        <PlayerNameModal onConfirm={() => setShowNameModal(false)} />
-      )}
+    <div className="min-h-screen bg-[#f7f6f3] flex flex-col">
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-xl">
 
-      {/* Raid toast notifications */}
-      <RaidNotification raids={raidAlerts} onDismiss={handleDismissRaid} />
-
-      {/* Top bar */}
-      <div className="flex items-center gap-3 px-4 py-1.5 border-b-2 border-[#00ff41] bg-[#0d0d0d] shrink-0">
-        <div className="text-xs neon-green font-black tracking-widest">🐺 WOLF OF ALMATY</div>
-        <div className="flex gap-3 text-[10px]">
-          <span className="text-[#444]">Day {state.day}/{state.maxDays}</span>
-          <span className="text-[#444]">|</span>
-          <span className="neon-blue">₸{state.tenge.toLocaleString()}</span>
-          <span className="text-[#444]">|</span>
-          <span className="neon-green">REP:{state.reputation}</span>
-          <span className="text-[#444]">|</span>
-          <span className="neon-yellow">CHR:{state.charisma}</span>
-          {playerName && (
-            <>
-              <span className="text-[#444]">|</span>
-              <span className="text-[#555]">{playerName}</span>
-            </>
-          )}
-        </div>
-
-        {timer.running && (
-          <div
-            className={`ml-auto flex items-center gap-2 px-2 py-0.5 border text-[10px] font-bold ${timerPct <= 25 ? 'pulse-glow' : ''}`}
-            style={{ borderColor: timerColor, color: timerColor }}
+          {/* Hero card */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="bg-[#1a1a1a] rounded-2xl p-10 mb-5 relative overflow-hidden"
           >
-            <span>⏱</span>
-            <span>{timer.display}</span>
+            {/* Wolf watermark */}
+            <div className="absolute right-6 top-4 text-[140px] opacity-[0.04] select-none pointer-events-none leading-none">
+              🐺
+            </div>
+
+            <div className="relative z-10">
+              <div className="text-5xl mb-4">🐺</div>
+              <h1 className="text-[32px] font-bold text-white leading-tight mb-2">
+                Wolf of Almaty Street
+              </h1>
+              <p className="text-[#9ca3af] text-sm mb-8 leading-relaxed">
+                Buy low. Sell high. Spot scammers. Survive the bazaar.
+                <br />Become the trading king of Almaty.
+              </p>
+
+              <div className="space-y-2.5">
+                {/* New Game */}
+                <motion.button
+                  whileHover={{ scale: 1.005 }}
+                  whileTap={{ scale: 0.995 }}
+                  onClick={handleNewGame}
+                  className="w-full py-3.5 px-5 bg-white text-[#1a1a1a] font-semibold rounded-xl hover:bg-[#f7f6f3] transition-colors text-left flex items-center justify-between text-sm"
+                >
+                  <span>New Game</span>
+                  <span className="text-[#9ca3af] font-normal">→</span>
+                </motion.button>
+
+                {/* Continue */}
+                <motion.button
+                  whileHover={mounted && save ? { scale: 1.005 } : {}}
+                  whileTap={mounted && save ? { scale: 0.995 } : {}}
+                  onClick={mounted && save ? handleContinue : undefined}
+                  disabled={!mounted || !save}
+                  className={`w-full py-3.5 px-5 rounded-xl font-semibold text-left flex items-center justify-between text-sm transition-colors ${
+                    mounted && save
+                      ? 'bg-[#2d2d2d] text-white hover:bg-[#383838] cursor-pointer'
+                      : 'bg-[#252525] text-[#4b5563] cursor-not-allowed'
+                  }`}
+                >
+                  <span>Continue</span>
+                  {mounted && save ? (
+                    <span className="text-[#9ca3af] font-normal text-xs">
+                      Day {save.day} · ₸{save.tenge.toLocaleString()}
+                    </span>
+                  ) : (
+                    <span className="text-[#374151] font-normal text-xs">No save found</span>
+                  )}
+                </motion.button>
+
+                {/* Secondary buttons */}
+                <div className="flex gap-2 pt-0.5">
+                  <button
+                    onClick={() => router.push('/how-to-play')}
+                    className="flex-1 py-2.5 px-4 rounded-xl text-xs font-medium text-[#9ca3af] hover:text-[#d1d5db] transition-colors"
+                    style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.08)' }}
+                  >
+                    How to Play
+                  </button>
+                  <button
+                    onClick={() => router.push('/leaderboard')}
+                    className="flex-1 py-2.5 px-4 rounded-xl text-xs font-medium text-[#9ca3af] hover:text-[#d1d5db] transition-colors"
+                    style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.08)' }}
+                  >
+                    Leaderboard
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Mini cards */}
+          <div className="grid grid-cols-2 gap-3 mb-0">
+
+            {/* Leaderboard preview */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="bg-white rounded-xl p-4 border border-[#e8e6e1] cursor-pointer hover:border-[#d5d3cd] transition-colors"
+              onClick={() => router.push('/leaderboard')}
+            >
+              <div className="flex items-center gap-1.5 mb-3">
+                <span className="text-sm">🏆</span>
+                <span className="text-[10px] font-semibold text-[#6b7280] tracking-wide">TOP TRADERS</span>
+              </div>
+              {leaderboard.length === 0 ? (
+                <div className="text-xs text-[#9ca3af]">
+                  {isSupabaseConfigured ? 'Loading rankings…' : 'Play to set the first record'}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {leaderboard.map((entry, i) => (
+                    <div key={entry.player_id} className="flex items-center gap-2">
+                      <span className="text-xs w-4">{['🥇', '🥈', '🥉'][i]}</span>
+                      <span className="text-xs font-medium text-[#1a1a1a] flex-1 truncate">{entry.player_name}</span>
+                      <span className="text-xs font-semibold text-[#2d6a4f]">₸{entry.daily_earnings.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+
+            {/* How to play mini */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.22 }}
+              className="bg-white rounded-xl p-4 border border-[#e8e6e1] cursor-pointer hover:border-[#d5d3cd] transition-colors"
+              onClick={() => router.push('/how-to-play')}
+            >
+              <div className="flex items-center gap-1.5 mb-3">
+                <span className="text-sm">📖</span>
+                <span className="text-[10px] font-semibold text-[#6b7280] tracking-wide">HOW TO PLAY</span>
+              </div>
+              <div className="space-y-1.5">
+                {[
+                  'Buy items at market price',
+                  'Clients make offers — negotiate',
+                  'Spot scammers & flag red tells',
+                  'Hit daily profit targets',
+                ].map((tip, i) => (
+                  <div key={i} className="flex items-start gap-1.5">
+                    <span className="text-[10px] text-[#9ca3af] mt-0.5 w-3 shrink-0">{i + 1}.</span>
+                    <span className="text-[11px] text-[#6b7280] leading-snug">{tip}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
           </div>
-        )}
-
-        <div
-          className="px-2 py-0.5 border text-[10px]"
-          style={{
-            borderColor: isBossPhase ? '#ff0040' : '#00ff41',
-            color: isBossPhase ? '#ff0040' : '#00ff41',
-            marginLeft: timer.running ? 0 : 'auto',
-          }}
-        >
-          {isBossPhase ? '⚔ BOSS FIGHT' : '📈 TRADING'}
         </div>
       </div>
 
-      {/* Main 3-panel layout */}
-      <div className="flex-1 overflow-hidden grid grid-cols-[240px_1fr_260px] gap-0">
-        {/* Left: Stats */}
-        <div className="border-r-2 border-[#1a1a1a] overflow-hidden">
-          <StatsPanel
-            state={state}
-            timerDisplay={timer.display}
-            timerSeconds={timer.seconds}
-            timerRunning={timer.running}
-            onEndDayEarly={handleEndDayEarly}
-            onStartBoss={handleStartBoss}
-          />
+      {/* Live ticker */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="ticker-wrap bg-white py-2 shrink-0"
+      >
+        <div className="ticker-content text-[11px] text-[#9ca3af] px-4">
+          {tickerText}
         </div>
-
-        {/* Center: Trading Terminal or Boss Arena */}
-        <div className="flex flex-col overflow-hidden">
-          <AnimatePresence mode="wait">
-            {isBossPhase ? (
-              <motion.div key="boss-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full overflow-hidden">
-                <BossArena state={state} dispatch={dispatch} />
-              </motion.div>
-            ) : (
-              <motion.div key="trading-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-hidden border-b-2 border-[#1a1a1a] relative">
-                  <TradingTerminal state={state} dispatch={dispatch} />
-                </div>
-                <div className="h-[160px] overflow-hidden shrink-0">
-                  <ActivityLog log={state.log} />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Right: NPC Roster + Leaderboard (or Battle Feed) */}
-        <div className="border-l-2 border-[#1a1a1a] overflow-hidden flex flex-col">
-          <AnimatePresence mode="wait">
-            {isBossPhase ? (
-              <motion.div key="battle-feed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex flex-col">
-                <div className="px-4 py-3 border-b-2 border-[#ff0040] bg-[#0d0d0d] shrink-0">
-                  <div className="neon-red text-xs font-bold tracking-widest">[ BATTLE FEED ]</div>
-                </div>
-                <div className="flex-1 overflow-hidden"><ActivityLog log={state.log} /></div>
-              </motion.div>
-            ) : (
-              <motion.div key="roster-lb" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex flex-col overflow-hidden">
-                {/* NPC Roster — top half */}
-                <div className="flex-1 overflow-hidden border-b border-[#1a1a1a]">
-                  <NPCRoster state={state} />
-                </div>
-                {/* Live Leaderboard — bottom portion */}
-                <div className="h-[220px] shrink-0 overflow-hidden">
-                  <LiveLeaderboard
-                    leaderboard={leaderboard}
-                    currentPlayerId={playerId}
-                    currentDailyEarnings={state.dailyStats.earned}
-                    connected={connected}
-                    isConfigured={isSupabaseConfigured}
-                    raidCost={RAID_COST}
-                    playerTenge={state.tenge}
-                    onRaid={handleRaid}
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

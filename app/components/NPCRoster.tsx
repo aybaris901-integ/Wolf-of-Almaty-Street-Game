@@ -1,5 +1,4 @@
 'use client';
-
 import { motion } from 'framer-motion';
 import { NPCS, BOSS } from '../game/data';
 import { GameState } from '../game/state';
@@ -10,11 +9,10 @@ interface NPCRosterProps {
 
 export default function NPCRoster({ state }: NPCRosterProps) {
   return (
-    <div className="panel h-full flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="px-4 py-3 border-b-2 border-[#00ff41]">
-        <div className="neon-green text-xs font-bold tracking-widest">[ CLIENT ROSTER ]</div>
-        <div className="text-[10px] text-[#666] mt-0.5">KNOWN ASSOCIATES</div>
+    <div className="h-full flex flex-col overflow-hidden bg-white">
+      <div className="px-4 py-3 border-b border-[#e8e6e1] shrink-0">
+        <div className="text-xs font-semibold text-[#1a1a1a]">Client Roster</div>
+        <div className="text-[10px] text-[#9ca3af] mt-0.5">Known associates</div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
@@ -23,49 +21,39 @@ export default function NPCRoster({ state }: NPCRosterProps) {
           return (
             <motion.div
               key={npc.id}
-              whileHover={{ x: 2 }}
-              className="p-3 border transition-all"
+              whileHover={unlocked ? { y: -1 } : {}}
+              className="p-3 rounded-xl border transition-all"
               style={{
-                borderColor: unlocked ? '#00ff41' : '#2a2a2a',
-                background: unlocked ? 'rgba(0,255,65,0.03)' : 'rgba(0,0,0,0.5)',
+                borderColor: unlocked ? '#e8e6e1' : '#f0eeeb',
+                background: unlocked ? 'white' : '#fafaf9',
               }}
             >
-              <div className="flex items-start gap-2">
+              <div className="flex items-start gap-2.5">
                 <div
-                  className="text-2xl"
-                  style={{ filter: unlocked ? 'none' : 'grayscale(1) brightness(0.3)' }}
+                  className="w-10 h-10 rounded-xl bg-[#f7f6f3] border border-[#e8e6e1] flex items-center justify-center text-xl shrink-0"
+                  style={{ filter: unlocked ? 'none' : 'grayscale(1) opacity(0.4)' }}
                 >
                   {npc.avatar}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div
-                    className="text-xs font-bold truncate"
-                    style={{ color: unlocked ? '#00ff41' : '#333' }}
-                  >
+                  <div className="text-xs font-semibold truncate" style={{ color: unlocked ? '#1a1a1a' : '#9ca3af' }}>
                     {npc.name}
                   </div>
-                  <div className="text-[9px] text-[#555] italic truncate">{npc.title}</div>
+                  <div className="text-[9px] text-[#9ca3af] italic truncate">{npc.title}</div>
                   {!unlocked && (
-                    <div className="text-[9px] text-[#ff6600] mt-0.5">
-                      🔒 Needs {npc.reputationRequired} rep
-                    </div>
+                    <div className="text-[9px] text-[#b45309] mt-0.5">🔒 Needs {npc.reputationRequired} rep</div>
                   )}
                   {unlocked && (
-                    <div className="text-[9px] text-[#444] mt-0.5 line-clamp-2">
-                      {npc.personality}
-                    </div>
+                    <div className="text-[9px] text-[#6b7280] mt-0.5 line-clamp-2">{npc.personality}</div>
                   )}
                 </div>
               </div>
               {unlocked && (
-                <div className="mt-2 pt-2 border-t border-[#1a1a1a]">
-                  <div className="text-[9px] text-[#555] mb-1">WANTS:</div>
+                <div className="mt-2 pt-2 border-t border-[#e8e6e1]">
+                  <div className="text-[9px] text-[#9ca3af] mb-1">Interested in:</div>
                   <div className="flex flex-wrap gap-1">
                     {npc.preferredItems.slice(0, 3).map((itemId) => (
-                      <span
-                        key={itemId}
-                        className="text-[8px] px-1 py-0.5 border border-[#333] text-[#666]"
-                      >
+                      <span key={itemId} className="text-[8px] px-1.5 py-0.5 rounded bg-[#f7f6f3] border border-[#e8e6e1] text-[#6b7280]">
                         {itemId.replace(/_/g, ' ')}
                       </span>
                     ))}
@@ -77,18 +65,18 @@ export default function NPCRoster({ state }: NPCRosterProps) {
         })}
 
         {/* Boss teaser */}
-        <div className="p-3 border-2 border-[#ff004033] mt-4">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-2xl" style={{ filter: 'grayscale(0.5)' }}>
+        <div className="p-3 rounded-xl border border-[#fecaca] bg-[#fef2f2] mt-2">
+          <div className="flex items-center gap-2.5 mb-1">
+            <div className="w-10 h-10 rounded-xl bg-white border border-[#fecaca] flex items-center justify-center text-xl shrink-0">
               {BOSS.avatar}
-            </span>
+            </div>
             <div>
-              <div className="neon-red text-xs font-bold">{BOSS.name}</div>
-              <div className="text-[9px] text-[#555]">{BOSS.title}</div>
+              <div className="text-xs font-semibold text-[#c0392b]">{BOSS.name}</div>
+              <div className="text-[9px] text-[#9ca3af]">{BOSS.title}</div>
             </div>
           </div>
-          <div className="text-[9px] text-[#666] line-clamp-2">{BOSS.description}</div>
-          <div className="text-[9px] neon-red mt-1 pulse-glow">⚠ FINAL BOSS</div>
+          <div className="text-[9px] text-[#6b7280] line-clamp-2">{BOSS.description}</div>
+          <div className="text-[9px] font-semibold text-[#c0392b] mt-1">⚠ Final Boss</div>
         </div>
       </div>
     </div>
