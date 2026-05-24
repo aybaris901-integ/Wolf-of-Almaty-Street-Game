@@ -20,20 +20,20 @@ export default function DayStartScreen({ state, onSetDifficulty, onBeginDay, onB
   const difficulty = state.difficulty;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f7f6f3] p-6">
+    <div className="min-h-screen flex items-center justify-center bg-[#f7f6f3] p-3 md:p-6 overflow-x-hidden">
       <div className="max-w-lg w-full">
 
         {/* Back */}
         <button
           onClick={onBack}
-          className="text-xs text-[#9ca3af] hover:text-[#6b7280] transition-colors mb-8 flex items-center gap-1"
+          className="min-h-11 text-xs text-[#9ca3af] hover:text-[#6b7280] transition-colors mb-4 md:mb-8 flex items-center gap-1"
         >
           ← Back to menu
         </button>
 
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <div className="text-5xl mb-3">📅</div>
-          <div className="text-3xl font-bold text-[#1a1a1a]">Day {state.day}</div>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6 md:mb-8">
+          <div className="text-4xl md:text-5xl mb-3">📅</div>
+          <div className="text-2xl md:text-3xl font-bold text-[#1a1a1a]">Day {state.day}</div>
           <div className="text-[#9ca3af] text-sm mt-1">of {state.maxDays}</div>
         </motion.div>
 
@@ -50,7 +50,7 @@ export default function DayStartScreen({ state, onSetDifficulty, onBeginDay, onB
                   transition={{ delay: 0.1 * i }}
                   whileHover={{ y: -1 }}
                   whileTap={{ scale: 0.99 }}
-                  className="w-full text-left p-4 rounded-2xl border transition-all"
+                  className="w-full min-h-11 text-left p-3 md:p-4 rounded-2xl border transition-all"
                   style={{ borderColor: d.border, background: d.bg }}
                   onClick={() => onSetDifficulty(d.id)}
                 >
@@ -74,7 +74,7 @@ export default function DayStartScreen({ state, onSetDifficulty, onBeginDay, onB
 
             {/* Stats card */}
             <div className="bg-white rounded-2xl border border-[#e8e6e1] p-4 mb-3">
-              <div className="grid grid-cols-3 gap-4 text-center mb-3">
+              <div className="grid grid-cols-1 min-[390px]:grid-cols-3 gap-2 md:gap-4 text-center mb-3">
                 <DayStat label="Capital" value={`₸${state.tenge.toLocaleString()}`} />
                 <DayStat label="Reputation" value={String(state.reputation)} />
                 <DayStat label="Charisma" value={String(state.charisma)} />
@@ -83,7 +83,7 @@ export default function DayStartScreen({ state, onSetDifficulty, onBeginDay, onB
                 {(() => {
                   const d = DIFFICULTIES.find((x) => x.id === difficulty)!;
                   return (
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-sm flex-wrap">
                       <span>{d.icon}</span>
                       <span className="font-semibold" style={{ color: d.color }}>{d.label}</span>
                       <span className="text-[#9ca3af]">— {DIFFICULTY_SECONDS[difficulty] / 60} min timer</span>
@@ -133,7 +133,7 @@ export default function DayStartScreen({ state, onSetDifficulty, onBeginDay, onB
 
             <motion.button
               whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-              className="w-full py-4 bg-[#1a1a1a] text-white font-semibold rounded-xl hover:bg-[#2d2d2d] transition-colors text-sm"
+              className="w-full min-h-11 py-4 bg-[#1a1a1a] text-white font-semibold rounded-xl hover:bg-[#2d2d2d] transition-colors text-sm"
               onClick={onBeginDay}
             >
               Begin Day {state.day} →

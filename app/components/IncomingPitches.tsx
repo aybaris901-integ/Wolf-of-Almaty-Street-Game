@@ -239,11 +239,11 @@ function PitchCard({
 
         {/* PENDING actions */}
         {isPending && (
-          <div className="ml-auto flex gap-1.5 flex-wrap justify-end">
+          <div className="w-full sm:w-auto sm:ml-auto grid grid-cols-1 min-[390px]:grid-cols-2 gap-1.5">
             {canCounterPitch && (
               <motion.button
                 initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#fffbeb] text-[#b45309] border border-[#fde68a]"
+                className="min-h-11 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#fffbeb] text-[#b45309] border border-[#fde68a]"
                 onClick={() => dispatch({ type: 'COUNTER_PITCH', pitchId: pitch.id })}
                 title="Out-scam the scammer!"
               >
@@ -251,7 +251,7 @@ function PitchCard({
               </motion.button>
             )}
             <button
-              className="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors"
+              className="min-h-11 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors"
               style={hasItem
                 ? { background: '#f0fdf4', color: '#2d6a4f', border: '1px solid #bbf7d0' }
                 : { background: '#f7f6f3', color: '#9ca3af', border: '1px solid #e8e6e1', cursor: 'not-allowed' }
@@ -262,7 +262,7 @@ function PitchCard({
               Negotiate
             </button>
             <button
-              className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#fef2f2] text-[#c0392b] border border-[#fecaca]"
+              className="min-h-11 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#fef2f2] text-[#c0392b] border border-[#fecaca]"
               onClick={() => dispatch({ type: 'RESPOND_INCOMING', pitchId: pitch.id, action: 'decline' })}
             >
               Decline
@@ -273,27 +273,27 @@ function PitchCard({
         {/* NEGOTIATING actions — 2-col grid + close deal */}
         {isNegotiating && (
           <div className="w-full mt-1 space-y-1.5">
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-1 min-[390px]:grid-cols-2 gap-1.5">
               <button
-                className="py-1.5 rounded-lg text-[10px] font-medium bg-[#f7f6f3] text-[#6b7280] border border-[#e8e6e1]"
+                className="min-h-11 py-1.5 rounded-lg text-[10px] font-medium bg-[#f7f6f3] text-[#6b7280] border border-[#e8e6e1]"
                 onClick={() => dispatch({ type: 'NEGOTIATE_INCOMING', pitchId: pitch.id, action: 'hold_firm' })}
               >
                 ✊ Hold Firm
               </button>
               <button
-                className="py-1.5 rounded-lg text-[10px] font-medium bg-[#fffbeb] text-[#b45309] border border-[#fde68a]"
+                className="min-h-11 py-1.5 rounded-lg text-[10px] font-medium bg-[#fffbeb] text-[#b45309] border border-[#fde68a]"
                 onClick={() => dispatch({ type: 'NEGOTIATE_INCOMING', pitchId: pitch.id, action: 'small_discount' })}
               >
                 −10%
               </button>
               <button
-                className="py-1.5 rounded-lg text-[10px] font-medium bg-[#fff7ed] text-[#ea580c] border border-[#fed7aa]"
+                className="min-h-11 py-1.5 rounded-lg text-[10px] font-medium bg-[#fff7ed] text-[#ea580c] border border-[#fed7aa]"
                 onClick={() => dispatch({ type: 'NEGOTIATE_INCOMING', pitchId: pitch.id, action: 'big_discount' })}
               >
                 −25%
               </button>
               <button
-                className="py-1.5 rounded-lg text-[10px] font-medium transition-colors"
+                className="min-h-11 py-1.5 rounded-lg text-[10px] font-medium transition-colors"
                 style={state.focus >= 25
                   ? { background: '#f5f3ff', color: '#6366f1', border: '1px solid #ddd6fe' }
                   : { background: '#f7f6f3', color: '#9ca3af', border: '1px solid #e8e6e1', cursor: 'not-allowed' }
@@ -306,13 +306,13 @@ function PitchCard({
               </button>
             </div>
             <button
-              className="w-full py-2 rounded-lg text-xs font-semibold bg-[#c0392b] text-white hover:bg-[#a93226] transition-colors"
+              className="w-full min-h-11 py-2 rounded-lg text-xs font-semibold bg-[#c0392b] text-white hover:bg-[#a93226] transition-colors"
               onClick={() => dispatch({ type: 'NEGOTIATE_INCOMING', pitchId: pitch.id, action: 'walk_away' })}
             >
               Walk Away
             </button>
             <button
-              className="w-full py-2 rounded-lg text-xs font-semibold bg-[#1a1a1a] text-white hover:bg-[#2d2d2d] transition-colors"
+              className="w-full min-h-11 py-2 rounded-lg text-xs font-semibold bg-[#1a1a1a] text-white hover:bg-[#2d2d2d] transition-colors"
               onClick={() => dispatch({ type: 'NEGOTIATE_INCOMING', pitchId: pitch.id, action: 'accept' })}
             >
               Close Deal — ₸{pitch.clientCurrentOffer.toLocaleString()}
@@ -322,9 +322,9 @@ function PitchCard({
 
         {/* CALLBACK actions */}
         {isCallback && (
-          <div className="ml-auto flex gap-1.5">
+          <div className="w-full sm:w-auto sm:ml-auto grid grid-cols-2 gap-1.5">
             <button
-              className="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors"
+              className="min-h-11 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors"
               style={hasItem
                 ? { background: '#f0fdf4', color: '#2d6a4f', border: '1px solid #bbf7d0' }
                 : { background: '#f7f6f3', color: '#9ca3af', border: '1px solid #e8e6e1', cursor: 'not-allowed' }
@@ -335,7 +335,7 @@ function PitchCard({
               📞 Accept
             </button>
             <button
-              className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#f7f6f3] text-[#6b7280] border border-[#e8e6e1]"
+              className="min-h-11 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#f7f6f3] text-[#6b7280] border border-[#e8e6e1]"
               onClick={() => dispatch({ type: 'RESPOND_INCOMING', pitchId: pitch.id, action: 'decline' })}
             >
               Ignore
@@ -364,14 +364,14 @@ export default function IncomingPitches({ state, dispatch }: IncomingPitchesProp
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <div className="px-3 py-2 border-b border-[#e8e6e1] flex items-center gap-2 shrink-0">
+      <div className="px-3 py-2 border-b border-[#e8e6e1] flex items-center gap-2 shrink-0 flex-wrap">
         <span className="text-[10px] font-semibold text-[#6b7280]">Incoming Offers</span>
         {activeCount > 0 && (
           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#fffbeb] text-[#b45309] border border-[#fde68a] font-medium">
             {activeCount} active
           </span>
         )}
-        <div className="ml-auto flex items-center gap-2 text-[9px]">
+        <div className="ml-auto flex items-center gap-2 text-[9px] flex-wrap justify-end">
           {numHighlights > 0
             ? <span className="text-[#2d6a4f] font-medium">{numHighlights} hint{numHighlights > 1 ? 's' : ''}</span>
             : <span className="text-[#c0392b]">No hints</span>
@@ -380,7 +380,7 @@ export default function IncomingPitches({ state, dispatch }: IncomingPitchesProp
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div className="flex-1 overflow-y-auto p-2 md:p-3 space-y-3">
         {state.incomingPitches.length === 0 && (
           <div className="text-center mt-10">
             <div className="text-3xl mb-2">📭</div>

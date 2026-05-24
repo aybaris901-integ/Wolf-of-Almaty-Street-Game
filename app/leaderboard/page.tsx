@@ -64,21 +64,21 @@ export default function LeaderboardPage() {
   const valueKey = tab === 'today' ? 'daily_earnings' : 'total_earnings';
 
   return (
-    <div className="min-h-screen bg-[#f7f6f3] py-12 px-6">
+    <div className="min-h-screen bg-[#f7f6f3] py-6 md:py-12 px-3 md:px-6 overflow-x-hidden">
       <div className="max-w-xl mx-auto">
 
         {/* Back */}
         <button
           onClick={() => router.push('/')}
-          className="text-xs text-[#9ca3af] hover:text-[#6b7280] transition-colors mb-8 flex items-center gap-1"
+          className="min-h-11 text-xs text-[#9ca3af] hover:text-[#6b7280] transition-colors mb-4 md:mb-8 flex items-center gap-1"
         >
           ← Back to menu
         </button>
 
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <div className="text-5xl mb-4">🏆</div>
-          <h1 className="text-3xl font-bold text-[#1a1a1a] mb-2">Leaderboard</h1>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6 md:mb-8">
+          <div className="text-4xl md:text-5xl mb-3 md:mb-4">🏆</div>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a1a] mb-2">Leaderboard</h1>
           <p className="text-[#6b7280] text-sm">Top traders in Almaty</p>
         </motion.div>
 
@@ -88,7 +88,7 @@ export default function LeaderboardPage() {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all"
+              className="flex-1 min-h-11 py-2 rounded-lg text-xs font-semibold transition-all"
               style={tab === t
                 ? { background: 'white', color: '#1a1a1a', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
                 : { background: 'transparent', color: '#6b7280' }
@@ -123,7 +123,7 @@ export default function LeaderboardPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="flex items-end gap-3 mb-6 justify-center"
+            className="flex items-end gap-2 md:gap-3 mb-6 justify-center"
           >
             {/* Silver */}
             {top3[1] && (
@@ -177,7 +177,7 @@ export default function LeaderboardPage() {
                     layout
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="flex items-center gap-3 px-4 py-3"
+                    className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-3 min-w-0"
                     style={{
                       borderBottom: i < rest.length - 1 ? '1px solid #e8e6e1' : 'none',
                       background: isMe ? '#f0fdf4' : 'white',
@@ -195,7 +195,7 @@ export default function LeaderboardPage() {
                         {getLifetimeRankTitle(entry.total_earnings)} · Day {entry.day_number}
                       </div>
                     </div>
-                    <div className="text-sm font-bold text-[#2d6a4f] shrink-0">
+                    <div className="text-xs md:text-sm font-bold text-[#2d6a4f] shrink-0">
                       ₸{entry[valueKey].toLocaleString()}
                     </div>
                   </motion.div>
@@ -222,7 +222,7 @@ function PodiumCard({
   return (
     <div className="flex-1 flex flex-col items-center">
       <div
-        className="w-full rounded-xl p-3 text-center border flex flex-col items-center justify-end"
+        className="w-full rounded-xl p-2 md:p-3 text-center border flex flex-col items-center justify-end min-w-0"
         style={{
           background: gold ? '#fffbeb' : isMe ? '#f0fdf4' : 'white',
           border: `1px solid ${gold ? '#fde68a' : isMe ? '#bbf7d0' : '#e8e6e1'}`,
@@ -233,7 +233,7 @@ function PodiumCard({
         <div className="text-xs font-semibold text-[#1a1a1a] truncate w-full text-center">{entry.player_name}</div>
         <div className="text-[10px] text-[#9ca3af] mt-0.5">Day {entry.day_number}</div>
         <div
-          className="text-sm font-bold mt-1"
+          className="text-xs md:text-sm font-bold mt-1 break-words"
           style={{ color: gold ? '#b45309' : '#2d6a4f' }}
         >
           ₸{(entry[valueKey] as number).toLocaleString()}

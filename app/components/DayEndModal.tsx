@@ -34,18 +34,18 @@ export default function DayEndModal({ day, stats, leaderboard, minProfitTarget, 
     '#6b7280';
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f7f6f3] p-6">
+    <div className="min-h-screen flex items-center justify-center bg-[#f7f6f3] p-3 md:p-6 overflow-x-hidden">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-md w-full"
+        className="max-w-md w-full max-h-[calc(100dvh-24px)] overflow-y-auto"
       >
         {/* Hero */}
-        <div className="bg-[#1a1a1a] rounded-2xl p-8 mb-4 text-center">
+        <div className="bg-[#1a1a1a] rounded-2xl p-5 md:p-8 mb-3 md:mb-4 text-center">
           <motion.div
             initial={{ scale: 0 }} animate={{ scale: 1 }}
             transition={{ type: 'spring', duration: 0.6 }}
-            className="text-5xl mb-4"
+            className="text-4xl md:text-5xl mb-3 md:mb-4"
           >
             {stats.earned >= 800_000 ? '🏆' : stats.earned >= 150_000 ? '💰' : '📊'}
           </motion.div>
@@ -61,7 +61,7 @@ export default function DayEndModal({ day, stats, leaderboard, minProfitTarget, 
           <motion.div
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="text-3xl font-bold text-white mt-3"
+            className="text-2xl md:text-3xl font-bold text-white mt-3"
           >
             ₸{stats.earned.toLocaleString()}
           </motion.div>
@@ -70,7 +70,7 @@ export default function DayEndModal({ day, stats, leaderboard, minProfitTarget, 
 
         {/* Stats grid */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-          className="bg-white rounded-2xl border border-[#e8e6e1] p-4 mb-3">
+          className="bg-white rounded-2xl border border-[#e8e6e1] p-3 md:p-4 mb-3">
           <div className="grid grid-cols-2 gap-3 mb-4">
             <AnimStat label="Deals Won"       value={String(stats.dealsWon)}          color="#2d6a4f" delay={0.4} />
             <AnimStat label="Deals Lost"      value={String(stats.dealsFailed)}       color="#c0392b" delay={0.5} />
@@ -139,7 +139,7 @@ export default function DayEndModal({ day, stats, leaderboard, minProfitTarget, 
         {leaderboard.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.0 }}
-            className="bg-white rounded-2xl border border-[#e8e6e1] p-4 mb-4"
+          className="bg-white rounded-2xl border border-[#e8e6e1] p-3 md:p-4 mb-4"
           >
             <div className="text-[10px] font-semibold text-[#9ca3af] tracking-wide mb-2">GLOBAL RANKINGS</div>
             <div className="space-y-1.5">
@@ -157,10 +157,10 @@ export default function DayEndModal({ day, stats, leaderboard, minProfitTarget, 
         {/* Actions */}
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }}
-          className="space-y-2"
+          className="sticky bottom-0 space-y-2 bg-[#f7f6f3] pt-2 pb-1"
         >
           <button
-            className="w-full py-3.5 bg-[#1a1a1a] text-white font-semibold rounded-xl hover:bg-[#2d2d2d] transition-colors text-sm"
+            className="w-full min-h-11 py-3.5 bg-[#1a1a1a] text-white font-semibold rounded-xl hover:bg-[#2d2d2d] transition-colors text-sm"
             onClick={onNextDay}
           >
             Start Day {day + 1} ({countdown}s)

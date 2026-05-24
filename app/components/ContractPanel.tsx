@@ -13,7 +13,7 @@ export default function ContractPanel({ state, dispatch }: ContractPanelProps) {
 
   return (
     <div className="h-full flex flex-col overflow-hidden relative">
-      <div className="px-3 py-2 border-b border-[#e8e6e1] shrink-0 flex items-center gap-2">
+      <div className="px-3 py-2 border-b border-[#e8e6e1] shrink-0 flex items-center gap-2 flex-wrap">
         <span className="text-[10px] font-semibold text-[#6b7280]">High-Value Contracts</span>
         <span className="text-[9px] text-[#9ca3af]">Charisma: <span className="font-semibold text-[#1a1a1a]">{state.charisma}</span></span>
       </div>
@@ -22,7 +22,7 @@ export default function ContractPanel({ state, dispatch }: ContractPanelProps) {
         {activeContract && <ContractNegotiation state={state} dispatch={dispatch} slot={activeContract} />}
       </AnimatePresence>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 overflow-y-auto p-2 md:p-3 space-y-2">
         {state.availableContracts.length === 0 && (
           <div className="text-center mt-10">
             <div className="text-3xl mb-2">📜</div>
@@ -69,7 +69,7 @@ export default function ContractPanel({ state, dispatch }: ContractPanelProps) {
                     {isReady && <span className="text-[9px] font-semibold text-[#b45309]">✍ Sign Now</span>}
                   </div>
                   <div className="text-[10px] text-[#6b7280] mt-0.5 line-clamp-2">{contract.description}</div>
-                  <div className="flex items-center gap-3 mt-1.5 text-[10px]">
+                  <div className="flex items-center gap-x-3 gap-y-1 mt-1.5 text-[10px] flex-wrap">
                     <span className="font-semibold text-[#ea580c]">₸{contract.value.toLocaleString()}</span>
                     <span className="text-[#9ca3af]">Needs {contract.requiredCharisma} charisma</span>
                   </div>
@@ -85,7 +85,7 @@ export default function ContractPanel({ state, dispatch }: ContractPanelProps) {
                 <div className="flex gap-2 pt-2 border-t border-[#e8e6e1]">
                   {slot.step === 'available' && (
                     <button
-                      className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold bg-[#fff7ed] text-[#ea580c] border border-[#fed7aa] hover:bg-[#ffedd5] transition-colors"
+                      className="flex-1 min-h-11 py-1.5 rounded-lg text-[10px] font-semibold bg-[#fff7ed] text-[#ea580c] border border-[#fed7aa] hover:bg-[#ffedd5] transition-colors"
                       onClick={() => dispatch({ type: 'PROPOSE_CONTRACT', contractId: contract.id })}
                     >
                       Negotiate
@@ -93,7 +93,7 @@ export default function ContractPanel({ state, dispatch }: ContractPanelProps) {
                   )}
                   {slot.step === 'ready_to_sign' && (
                     <button
-                      className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold bg-[#1a1a1a] text-white hover:bg-[#2d2d2d] transition-colors"
+                      className="flex-1 min-h-11 py-1.5 rounded-lg text-[10px] font-semibold bg-[#1a1a1a] text-white hover:bg-[#2d2d2d] transition-colors"
                       onClick={() => dispatch({ type: 'SIGN_CONTRACT', contractId: contract.id })}
                     >
                       ✍ Sign Contract
@@ -118,12 +118,12 @@ function ContractNegotiation({ state, dispatch, slot }: { state: GameState; disp
       initial={{ opacity: 0, y: -16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16 }}
-      className="absolute inset-x-0 top-0 z-10 m-3 p-4 bg-white rounded-2xl border border-[#fed7aa]"
+      className="absolute inset-x-0 top-0 z-10 m-2 md:m-3 p-3 md:p-4 max-h-[calc(100%-16px)] overflow-y-auto bg-white rounded-2xl border border-[#fed7aa]"
       style={{ boxShadow: '0 8px 32px rgba(234,88,12,0.12)' }}
     >
       <div className="flex items-start gap-2.5 mb-3">
         <span className="text-2xl">{contract.emoji}</span>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold text-[#1a1a1a]">{contract.title}</div>
           <div className="text-[10px] text-[#9ca3af] mt-0.5 italic">{contract.negotiationText}</div>
         </div>
@@ -146,23 +146,23 @@ function ContractNegotiation({ state, dispatch, slot }: { state: GameState; disp
       </div>
 
       {slot.step === 'negotiating' && (
-        <div className="flex gap-2">
+        <div className="grid grid-cols-1 min-[390px]:grid-cols-3 gap-2">
           <button
-            className="flex-1 py-2 rounded-lg text-xs font-semibold bg-[#f0fdf4] text-[#2d6a4f] border border-[#bbf7d0]"
+            className="min-h-11 py-2 rounded-lg text-xs font-semibold bg-[#f0fdf4] text-[#2d6a4f] border border-[#bbf7d0]"
             onClick={() => dispatch({ type: 'ACCEPT_CONTRACT_TERMS', contractId: contract.id })}
           >
             ✓ Accept Terms
           </button>
           {slot.counterRound < 1 && (
             <button
-              className="flex-1 py-2 rounded-lg text-xs font-semibold bg-[#fffbeb] text-[#b45309] border border-[#fde68a]"
+              className="min-h-11 py-2 rounded-lg text-xs font-semibold bg-[#fffbeb] text-[#b45309] border border-[#fde68a]"
               onClick={() => dispatch({ type: 'COUNTER_CONTRACT', contractId: contract.id })}
             >
               ↑ Counter +12%
             </button>
           )}
           <button
-            className="py-2 px-3 rounded-lg text-xs font-semibold bg-[#fef2f2] text-[#c0392b] border border-[#fecaca]"
+            className="min-h-11 py-2 px-3 rounded-lg text-xs font-semibold bg-[#fef2f2] text-[#c0392b] border border-[#fecaca]"
             onClick={() => dispatch({ type: 'DISMISS_CONTRACT' })}
           >
             Walk
@@ -171,15 +171,15 @@ function ContractNegotiation({ state, dispatch, slot }: { state: GameState; disp
       )}
 
       {slot.step === 'ready_to_sign' && (
-        <div className="flex gap-2">
+        <div className="grid grid-cols-1 min-[390px]:grid-cols-[1fr_auto] gap-2">
           <button
-            className="flex-1 py-2 rounded-lg text-xs font-semibold bg-[#1a1a1a] text-white hover:bg-[#2d2d2d] transition-colors"
+            className="min-h-11 py-2 rounded-lg text-xs font-semibold bg-[#1a1a1a] text-white hover:bg-[#2d2d2d] transition-colors"
             onClick={() => dispatch({ type: 'SIGN_CONTRACT', contractId: contract.id })}
           >
             ✍ Sign Now — ₸{slot.currentOffer.toLocaleString()}
           </button>
           <button
-            className="py-2 px-3 rounded-lg text-xs font-semibold bg-[#f7f6f3] text-[#6b7280] border border-[#e8e6e1]"
+            className="min-h-11 py-2 px-3 rounded-lg text-xs font-semibold bg-[#f7f6f3] text-[#6b7280] border border-[#e8e6e1]"
             onClick={() => dispatch({ type: 'DISMISS_CONTRACT' })}
           >
             Later

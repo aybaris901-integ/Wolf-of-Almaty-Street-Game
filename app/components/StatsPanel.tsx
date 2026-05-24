@@ -47,7 +47,7 @@ export default function StatsPanel({
   const profile = getDayProfile(state.day);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-white">
+    <div className="md:h-full flex flex-col overflow-visible md:overflow-hidden bg-white">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#e8e6e1] shrink-0">
         <div className="text-xs font-semibold text-[#1a1a1a]">Wolf Terminal</div>
@@ -196,7 +196,7 @@ export default function StatsPanel({
       <div className="mt-auto px-3 pb-3 space-y-2 shrink-0">
         {state.phase === 'sales' && (
           <button
-            className="w-full py-2.5 rounded-lg bg-[#f7f6f3] border border-[#e8e6e1] text-xs font-medium text-[#6b7280] hover:bg-[#edecea] transition-colors"
+            className="w-full min-h-11 py-2.5 rounded-lg bg-[#f7f6f3] border border-[#e8e6e1] text-xs font-medium text-[#6b7280] hover:bg-[#edecea] transition-colors"
             onClick={onEndDayEarly}
           >
             End Day Early
@@ -204,7 +204,7 @@ export default function StatsPanel({
         )}
         {(state.phase === 'sales' || state.phase === 'day_start') && canFightBoss && (
           <button
-            className="pulse-glow w-full py-2.5 rounded-lg text-xs font-semibold text-white transition-colors"
+            className="pulse-glow w-full min-h-11 py-2.5 rounded-lg text-xs font-semibold text-white transition-colors"
             style={{ background: '#c0392b' }}
             onClick={onStartBoss}
           >

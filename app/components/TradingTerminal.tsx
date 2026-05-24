@@ -36,7 +36,7 @@ export default function TradingTerminal({ state, dispatch }: TradingTerminalProp
   return (
     <div className="h-full flex flex-col overflow-hidden bg-white">
       {/* Tab bar */}
-      <div className="px-4 py-2 border-b border-[#e8e6e1] flex items-center gap-1 shrink-0">
+      <div className="px-2 md:px-4 py-2 border-b border-[#e8e6e1] flex items-center gap-1 shrink-0 overflow-x-auto">
         {TABS.map((tab) => {
           const active = activeTab === tab.id;
           const badge = tab.id === 'incoming' && pendingIncoming > 0
@@ -47,7 +47,7 @@ export default function TradingTerminal({ state, dispatch }: TradingTerminalProp
           return (
             <button
               key={tab.id}
-              className="relative px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+              className="relative min-h-11 md:min-h-9 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap"
               style={active
                 ? { background: '#1a1a1a', color: '#fff' }
                 : { background: 'transparent', color: '#6b7280' }
@@ -103,9 +103,9 @@ function rarityBadge(r: string) {
 
 function MarketTab({ state, dispatch }: TradingTerminalProps) {
   return (
-    <div className="flex h-full w-full">
+    <div className="flex flex-col md:flex-row h-full w-full">
       {/* Buy */}
-      <div className="flex-1 border-r border-[#e8e6e1] flex flex-col overflow-hidden">
+      <div className="flex-1 border-b md:border-b-0 md:border-r border-[#e8e6e1] flex flex-col overflow-hidden min-h-0">
         <div className="px-3 py-2 border-b border-[#e8e6e1] shrink-0">
           <span className="text-[10px] font-semibold text-[#6b7280]">Buy from Market</span>
         </div>
@@ -114,11 +114,19 @@ function MarketTab({ state, dispatch }: TradingTerminalProps) {
             const selected = state.selectedItemToBuy === item.id;
             const badge = rarityBadge(item.rarity);
             return (
-              <motion.button
+              <motion.div
                 key={item.id}
                 whileHover={{ y: -1 }}
+                role="button"
+                tabIndex={0}
                 onClick={() => dispatch({ type: 'SELECT_BUY', itemId: selected ? null : item.id })}
-                className="w-full text-left p-2.5 rounded-xl border transition-all"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    dispatch({ type: 'SELECT_BUY', itemId: selected ? null : item.id });
+                  }
+                }}
+                className="w-full text-left p-3 md:p-2.5 rounded-xl border transition-all"
                 style={{
                   borderColor: selected ? '#1a1a1a' : '#e8e6e1',
                   background: selected ? '#f7f6f3' : 'white',
@@ -128,12 +136,12 @@ function MarketTab({ state, dispatch }: TradingTerminalProps) {
                   <span className="text-lg shrink-0">{item.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs font-semibold text-[#1a1a1a] truncate">{item.name}</span>
+                      <span className="text-xs font-semibold text-[#1a1a1a] break-words">{item.name}</span>
                       <span className="text-[8px] px-1 py-0.5 rounded font-medium" style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}` }}>
                         {badge.label}
                       </span>
                     </div>
-                    <div className="text-[9px] text-[#9ca3af] truncate mt-0.5">{item.description}</div>
+                    <div className="text-[10px] md:text-[9px] text-[#9ca3af] mt-0.5 break-words">{item.description}</div>
                   </div>
                   <div className="text-xs font-semibold text-[#1a1a1a] shrink-0">₸{item.buyPrice.toLocaleString()}</div>
                 </div>
@@ -144,7 +152,7 @@ function MarketTab({ state, dispatch }: TradingTerminalProps) {
                         {[1, 2, 5].map((qty) => (
                           <button
                             key={qty}
-                            className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition-colors"
+                            className="flex-1 min-h-11 py-1.5 rounded-lg text-[10px] font-semibold transition-colors"
                             style={state.tenge < item.buyPrice * qty
                               ? { background: '#f7f6f3', color: '#9ca3af', border: '1px solid #e8e6e1', cursor: 'not-allowed' }
                               : { background: '#f0fdf4', color: '#2d6a4f', border: '1px solid #bbf7d0' }
@@ -159,14 +167,14 @@ function MarketTab({ state, dispatch }: TradingTerminalProps) {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.button>
+              </motion.div>
             );
           })}
         </div>
       </div>
 
       {/* Sell */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
         <div className="px-3 py-2 border-b border-[#e8e6e1] shrink-0">
           <span className="text-[10px] font-semibold text-[#6b7280]">Inventory — Sell</span>
         </div>
@@ -184,17 +192,25 @@ function MarketTab({ state, dispatch }: TradingTerminalProps) {
               const profit = item.sellPrice - slot.purchasePrice;
               const profitPct = Math.round((profit / slot.purchasePrice) * 100);
               return (
-                <motion.button
+                <motion.div
                   key={slot.itemId}
                   whileHover={{ y: -1 }}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => dispatch({ type: 'SELECT_SELL', itemId: selected ? null : slot.itemId })}
-                  className="w-full text-left p-2.5 rounded-xl border transition-all"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      dispatch({ type: 'SELECT_SELL', itemId: selected ? null : slot.itemId });
+                    }
+                  }}
+                  className="w-full text-left p-3 md:p-2.5 rounded-xl border transition-all"
                   style={{ borderColor: selected ? '#1a1a1a' : '#e8e6e1', background: selected ? '#f7f6f3' : 'white' }}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-lg shrink-0">{item.emoji}</span>
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold text-[#1a1a1a] truncate">{item.name}</div>
+                      <div className="text-xs font-semibold text-[#1a1a1a] break-words">{item.name}</div>
                       <div className="text-[9px] text-[#9ca3af]">Qty: {slot.quantity}</div>
                     </div>
                     <div className="text-right shrink-0">
@@ -213,7 +229,7 @@ function MarketTab({ state, dispatch }: TradingTerminalProps) {
                             .map((qty) => (
                               <button
                                 key={qty}
-                                className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition-colors"
+                                className="flex-1 min-h-11 py-1.5 rounded-lg text-[10px] font-semibold transition-colors"
                                 style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }}
                                 onClick={(e) => { e.stopPropagation(); dispatch({ type: 'SELL_ITEM', itemId: item.id, quantity: qty }); }}
                               >
@@ -224,7 +240,7 @@ function MarketTab({ state, dispatch }: TradingTerminalProps) {
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </motion.button>
+                </motion.div>
               );
             })
           )}
@@ -259,7 +275,7 @@ function OutgoingTab({ state, dispatch }: TradingTerminalProps) {
               className="p-3 rounded-xl border transition-all"
               style={{ borderColor: available ? '#e8e6e1' : '#f0eeeb', background: available ? 'white' : '#fafaf9' }}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex flex-col sm:flex-row items-start gap-3">
                 <span className="text-2xl shrink-0">{npc.avatar}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -267,7 +283,7 @@ function OutgoingTab({ state, dispatch }: TradingTerminalProps) {
                     <span className="text-[10px] text-[#9ca3af] italic">{npc.title}</span>
                   </div>
                   <div className="text-[10px] text-[#6b7280] mt-0.5">{pitch.description}</div>
-                  <div className="flex items-center gap-3 mt-1.5 text-[10px]">
+                  <div className="flex items-center gap-x-3 gap-y-1 mt-1.5 text-[10px] flex-wrap">
                     <span className="text-[#6b7280]">{item.emoji} {item.name}</span>
                     <span className="font-semibold text-[#2d6a4f]">₸{pitch.basePrice.toLocaleString()}</span>
                     <span className="text-[#9ca3af]">+₸{pitch.successBonus.toLocaleString()} bonus</span>
@@ -276,7 +292,7 @@ function OutgoingTab({ state, dispatch }: TradingTerminalProps) {
                   {!hasItem && hasRep && <div className="text-[10px] text-[#b45309] mt-1">Missing {item.name}</div>}
                 </div>
                 <button
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0"
+                  className="w-full sm:w-auto min-h-11 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0"
                   style={available
                     ? { background: '#1a1a1a', color: 'white' }
                     : { background: '#f7f6f3', color: '#9ca3af', border: '1px solid #e8e6e1', cursor: 'not-allowed' }
@@ -309,14 +325,14 @@ function NegotiationModal({ state, dispatch }: TradingTerminalProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
-      className="absolute inset-x-0 top-0 z-10 m-3 p-4 bg-white rounded-2xl border border-[#e8e6e1]"
+      className="absolute inset-x-0 top-0 z-10 m-2 md:m-3 p-3 md:p-4 max-h-[calc(100%-16px)] overflow-y-auto bg-white rounded-2xl border border-[#e8e6e1]"
       style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
     >
       <div className="flex items-start gap-3 mb-3">
         <span className="text-2xl shrink-0">{npc.avatar}</span>
-        <div className="flex-1">
-          <div className="text-sm font-semibold text-[#1a1a1a]">{npc.name}</div>
-          <div className="text-[10px] text-[#9ca3af] italic">{npc.title}</div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold text-[#1a1a1a] break-words">{npc.name}</div>
+          <div className="text-[10px] text-[#9ca3af] italic break-words">{npc.title}</div>
         </div>
         <span className="text-xl">{moodEmoji}</span>
       </div>
@@ -329,7 +345,7 @@ function NegotiationModal({ state, dispatch }: TradingTerminalProps) {
         <div className="h-full rounded-full bg-[#1a1a1a] transition-all" style={{ width: `${roundPct}%` }} />
       </div>
 
-      <div className="bg-[#f7f6f3] rounded-xl p-3 mb-3 flex justify-between items-center">
+      <div className="bg-[#f7f6f3] rounded-xl p-3 mb-3 flex flex-col min-[390px]:flex-row justify-between gap-2 min-[390px]:items-center">
         <div>
           <div className="text-[10px] text-[#9ca3af]">Current Offer</div>
           <div className="text-xl font-bold text-[#1d4ed8]">₸{ap.currentOffer.toLocaleString()}</div>
@@ -340,7 +356,7 @@ function NegotiationModal({ state, dispatch }: TradingTerminalProps) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-[10px] mb-2">
+      <div className="flex flex-col min-[390px]:flex-row min-[390px]:items-center justify-between gap-1 text-[10px] mb-2">
         <span className="text-[#6b7280]">Focus: <span className="font-semibold text-[#6366f1]">{state.focus}/100</span></span>
         <div className="flex gap-2 text-[#9ca3af]">
           {ap.fakeScaricityUsed && <span>📢 Scarcity used</span>}
@@ -348,9 +364,9 @@ function NegotiationModal({ state, dispatch }: TradingTerminalProps) {
         </div>
       </div>
 
-      <div className="flex gap-2 mb-2">
+      <div className="grid grid-cols-1 min-[390px]:grid-cols-2 gap-2 mb-2">
         <button
-          className="flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-colors"
+          className="min-h-11 py-1.5 rounded-lg text-[10px] font-medium transition-colors"
           style={(!ap.fakeScaricityUsed && state.focus >= 20)
             ? { background: '#f0fdf4', color: '#2d6a4f', border: '1px solid #bbf7d0' }
             : { background: '#f7f6f3', color: '#9ca3af', border: '1px solid #e8e6e1', cursor: 'not-allowed' }
@@ -361,7 +377,7 @@ function NegotiationModal({ state, dispatch }: TradingTerminalProps) {
           📢 Scarcity <span className="opacity-60">-20F</span>
         </button>
         <button
-          className="flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-colors"
+          className="min-h-11 py-1.5 rounded-lg text-[10px] font-medium transition-colors"
           style={(!ap.nameDropUsed && state.focus >= 25 && state.charisma >= 15)
             ? { background: '#f5f3ff', color: '#6366f1', border: '1px solid #ddd6fe' }
             : { background: '#f7f6f3', color: '#9ca3af', border: '1px solid #e8e6e1', cursor: 'not-allowed' }
@@ -373,23 +389,23 @@ function NegotiationModal({ state, dispatch }: TradingTerminalProps) {
         </button>
       </div>
 
-      <div className="flex gap-2">
+      <div className="grid grid-cols-1 min-[390px]:grid-cols-3 gap-2">
         <button
-          className="flex-1 py-2 rounded-lg text-xs font-semibold bg-[#f0fdf4] text-[#2d6a4f] border border-[#bbf7d0] transition-colors hover:bg-[#dcfce7]"
+          className="min-h-11 py-2 rounded-lg text-xs font-semibold bg-[#f0fdf4] text-[#2d6a4f] border border-[#bbf7d0] transition-colors hover:bg-[#dcfce7]"
           onClick={() => dispatch({ type: 'NEGOTIATE', action: 'accept' })}
         >
           ✓ Accept
         </button>
         {ap.round < ap.maxRounds && (
           <button
-            className="flex-1 py-2 rounded-lg text-xs font-semibold bg-[#fffbeb] text-[#b45309] border border-[#fde68a] transition-colors"
+            className="min-h-11 py-2 rounded-lg text-xs font-semibold bg-[#fffbeb] text-[#b45309] border border-[#fde68a] transition-colors"
             onClick={() => dispatch({ type: 'NEGOTIATE', action: 'counter' })}
           >
             ↔ Counter
           </button>
         )}
         <button
-          className="flex-1 py-2 rounded-lg text-xs font-semibold bg-[#fef2f2] text-[#c0392b] border border-[#fecaca] transition-colors"
+          className="min-h-11 py-2 rounded-lg text-xs font-semibold bg-[#fef2f2] text-[#c0392b] border border-[#fecaca] transition-colors"
           onClick={() => dispatch({ type: 'NEGOTIATE', action: 'walk' })}
         >
           ✗ Walk Away
